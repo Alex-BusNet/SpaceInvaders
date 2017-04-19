@@ -10,31 +10,6 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     redrawPlayer = true;
     redrawBunkers = true;
 
-    int bunkerX = 100, bunkerY = 550;
-    for(int k = 0; k < 4; k++)
-    {
-
-        bunkers.push_back(
-                    new QPolygon(
-                            QVector<QPoint>
-                            {
-                                QPoint(bunkerX + 20, bunkerY),
-                                QPoint(bunkerX + 70, bunkerY),
-                                QPoint(bunkerX + 90, bunkerY + 20),
-                                QPoint(bunkerX + 90, bunkerY + 60),
-                                QPoint(bunkerX + 70, bunkerY + 60),
-                                QPoint(bunkerX + 60, bunkerY + 45),
-                                QPoint(bunkerX + 30, bunkerY + 45),
-                                QPoint(bunkerX + 20, bunkerY + 60),
-                                QPoint(bunkerX, bunkerY + 60),
-                                QPoint(bunkerX, bunkerY + 20)
-                            }
-                        )
-                    );
-
-        bunkerX += 200;
-    }
-
     player = new Player(428, 630);
 
     // Initialize the Aliens
@@ -149,10 +124,6 @@ void GameManager::paintEvent(QPaintEvent *e)
         bunkerY = 550;
         startX = 75 + (220 * (k + 1));
     }
-//    foreach(QPolygon* r, bunkers)
-//    {
-//        paint.drawPolygon(*r);
-//    }
 
     //==================
     // Player Rendering
