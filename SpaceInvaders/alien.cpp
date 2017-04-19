@@ -1,6 +1,6 @@
-#include "aliens.h"
+#include "alien.h"
 
-Aliens::Aliens(int type, int posX, int posY)
+Alien::Alien(int type, int posX, int posY)
 {
     this->type = type;
     this->posX = posX;
@@ -8,7 +8,7 @@ Aliens::Aliens(int type, int posX, int posY)
     this->frame = 0;
 }
 
-void Aliens::drawAlien(QPainter *paint)
+void Alien::drawAlien(QPainter *paint, bool updateFrame)
 {
     int rX = posX, rY = posY;
     for(int i = 0; i < 8; i++)
@@ -27,12 +27,15 @@ void Aliens::drawAlien(QPainter *paint)
         rY += 3;
     }
 
-    if(frame == 1)
+    if(updateFrame)
     {
-        frame = 0;
-    }
-    else
-    {
-        frame = 1;
+        if(frame == 1)
+        {
+            frame = 0;
+        }
+        else
+        {
+            frame = 1;
+        }
     }
 }

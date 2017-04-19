@@ -1,10 +1,15 @@
 #include "gamemanager.h"
-
+#include <QDebug>
 #include <QPainter>
 
 GameManager::GameManager(QWidget *parent) : QWidget(parent)
 {
     this->setFixedSize(900, 700);
+
+    redrawAliens = true;
+    redrawPlayer = true;
+    redrawBunkers = true;
+
     int bunkerX = 100, bunkerY = 550;
     for(int k = 0; k < 4; k++)
     {
@@ -31,14 +36,32 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     }
 
     player = new Player(428, 630);
-    testAlien = new Aliens(0, 57, 40);
-    testAlien2 = new Aliens(1, 107, 40);
-    testAlien3 = new Aliens(2, 157, 40);
+
+    // Initialize the Aliens
+    int alienX = 57, alienY = 40;
+    for(int i = 0; i < 5; i++)
+    {
+        for(int j = 0; j < 11; j++)
+        {
+            alienVec.push_back(new Alien(invaders[i][j], alienX, alienY));
+            alienX += 50;
+
+        }
+
+        alienX = 57;
+        alienY += 50;
+    }
 
     alienAnimationTimer = new QTimer(this);
     alienAnimationTimer->setInterval(500);
-    connect(alienAnimationTimer, SIGNAL(timeout()), this, SLOT(update()));
+    connect(alienAnimationTimer, SIGNAL(timeout()), this, SLOT(updateAliens()));
+
+    gameUpdateTimer = new QTimer(this);
+    gameUpdateTimer->setInterval(17);
+    connect(gameUpdateTimer, SIGNAL(timeout()), this, SLOT(update()));
+
     alienAnimationTimer->start();
+    gameUpdateTimer->start();
 
 }
 
@@ -60,7 +83,9 @@ void GameManager::paintEvent(QPaintEvent *e)
         paint.drawLine(posX, posY, 850, posY);
         for(int j = 0; j < 16; j++)
         {
+            //Grid Coords
 //            paint.drawText(posX + 15, posY + 25, QString("%1, %2").arg(i).arg(j));
+
             paint.drawLine(posX, posY, posX, posY + 50);
             posX += 50;
         }
@@ -72,13 +97,32 @@ void GameManager::paintEvent(QPaintEvent *e)
     paint.drawLine(850, 30, 850, posY);
     paint.drawLine(posX, posY, 850, posY);
 
+    //======================
+    // Projectile Rendering
+    //======================
+
+    /// DO NOT write collision logic here
+    /// Handle collision logic in a seperate function
+    ///  that is controlled by a seperate timer.
+
     //=================
     // Enemy Rendering
     //=================
+
     paint.setBrush(QBrush(Qt::white));
-    testAlien->drawAlien(&paint);
-    testAlien2->drawAlien(&paint);
-    testAlien3->drawAlien(&paint);
+    // Some of this render logic may changed depending on
+    //   what happens with tracking living invaders
+    foreach(Alien *a, alienVec)
+    {
+        //if(redrawAliens)
+        //{
+        /// Add Update Position logic before redraw
+        //}
+
+        a->drawAlien(&paint, redrawAliens);
+    }
+
+    redrawAliens = false;
 
     //==================
     // Bunker Rendering
@@ -95,18 +139,35 @@ void GameManager::paintEvent(QPaintEvent *e)
     // Player Rendering
     //==================
 
+    player->UpdatePosition();
     player->drawPlayer(&paint);
-
 
     //================
     // UI Rendering
     //================
 
-    paint.drawLine(QLine(0, 678, 900, 678));
+    paint.drawLine(QLine(0, 670, 900, 670));
     QFont font("TypeWriter", 10, 1);
     paint.setFont(font);
     paint.drawText(20, 690, QString("%1").arg(player->GetLivesRemaining()));
     paint.drawText(20, 20, "<<ADD SCORE TRACKER>>");
     paint.drawText(380, 20, "<<ADD HIGH SCORE>>");
     /// Add score tracker
+}
+
+void GameManager::keyPressEvent(QKeyEvent *event)
+{
+    player->InputHandler(static_cast<QKeyEvent*>(event), true);
+    event->accept();
+}
+
+void GameManager::keyReleaseEvent(QKeyEvent *event)
+{
+    player->InputHandler(static_cast<QKeyEvent*>(event), false);
+    event->accept();
+}
+
+void GameManager::updateAliens()
+{
+    redrawAliens = true;
 }
