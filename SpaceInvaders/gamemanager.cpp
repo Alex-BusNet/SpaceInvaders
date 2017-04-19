@@ -130,10 +130,29 @@ void GameManager::paintEvent(QPaintEvent *e)
 
     paint.setBrush(QBrush(Qt::green));
     paint.setPen(QPen(Qt::green));
-    foreach(QPolygon* r, bunkers)
+    int startX = 75, bunkerX = 75, bunkerY = 550;
+    for(int k = 0; k < 4; k++)
     {
-        paint.drawPolygon(*r);
+        for(int i = 0; i < 30; i++)
+        {
+            for(int j = 0; j < 44; j++)
+            {
+                if(bunker[i][j] == 1)
+                    paint.drawRect(QRect(bunkerX, bunkerY, 2, 2));
+
+                bunkerX += 2;
+            }
+
+            bunkerY += 2;
+            bunkerX = startX;
+        }
+        bunkerY = 550;
+        startX = 75 + (220 * (k + 1));
     }
+//    foreach(QPolygon* r, bunkers)
+//    {
+//        paint.drawPolygon(*r);
+//    }
 
     //==================
     // Player Rendering
