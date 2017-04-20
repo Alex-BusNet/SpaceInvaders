@@ -12,6 +12,7 @@ Player::Player(int startX, int startY)
     moveLeft = false;
     moveRight = false;
 
+    /// Change this to an array
     // Player Bounding rect size: 45px X 30px
     laser << QPoint(posX, posY + 20)        // 0
           << QPoint(posX + 5, posY + 15)    // 1

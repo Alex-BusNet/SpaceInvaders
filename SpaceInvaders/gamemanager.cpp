@@ -20,7 +20,6 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
         {
             alienVec.push_back(new Alien(invaders[i][j], alienX, alienY));
             alienX += 50;
-
         }
 
         alienX = 57;
@@ -71,6 +70,7 @@ void GameManager::paintEvent(QPaintEvent *e)
         posY += 50;
     }
 
+    // These two lines make the grid look more complete
     paint.drawLine(850, 30, 850, posY);
     paint.drawLine(posX, posY, 850, posY);
 
@@ -87,15 +87,34 @@ void GameManager::paintEvent(QPaintEvent *e)
     /// Handle collision logic in a seperate function
     ///  that is controlled by a seperate timer.
     ///
-    /// To determine which bunker was hit and where, use:
+    /// Projectile size: 1px X 3px OR 2px X 5px (Pick one, I don't care which.)
+    ///     You could make them bigger just adjust how many pixels are removed in the i direction
+    ///     Use (i-1) and check for (i-1) >= 0
+    ///
+    /// To determine if a bunker was hit, which bunker was hit, and where, use:
     ///    k = projectilePosX / 225
+    ///    j = projectilePosX - ((75 * (k + 1) + (220 * k))
+    ///    i = 550 - projectilePosY
+    ///
+    ///    Be sure to add checks for k, j, and i >= 0 AND j < 44 AND i < 30 AND k < 4
+    ///     before accessing the arrays.
     ///
     ///     Bunkers are 88px X 60px
     ///       Bunker 0 domain: 75px - 163px
     ///       Bunker 1 domain: 295px - 383px
     ///       Bunker 2 domain: 515px - 603px
     ///       Bunker 3 domain: 735px - 823px
-    ///     STILL NEED EQN FOR FINDING j AND i
+    ///     Bunker range: 550px - 610px
+    ///
+    /// To determine if the player was hit, use:
+    ///     << WIP >>
+    ///
+    ///
+    /// To determine if an invader was hit, use:
+    ///     << WIP >>
+    ///
+    ///     Invaders are 24px X 36px
+    ///
 
     //=================
     // Enemy Rendering
