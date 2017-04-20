@@ -125,22 +125,29 @@ void GameManager::paintEvent(QPaintEvent *e)
     paint.setBrush(QBrush(Qt::white));
     // Some of this render logic may changed depending on
     //   what happens with tracking living invaders
-    for(int j = 0; j < 30; j++)
-    {
-        for(int i = 0; i < 10; i++)
-        {
-            if(grid[i][j] == 1)
-            {
-                shiftAliens = true;
-                grid[i + 1][j] = 1;
-                grid[i][j] = 0;
-                break;
-            }
-        }
 
-        if(shiftAliens)
-            break;
-    }
+    /// I know what is wrong, but it will take a bit of time to correct
+//    if(redrawAliens)
+//    {
+//        for(int j = 0; j < 30; j++)
+//        {
+//            for(int i = 0; i < 10; i++)
+//            {
+//                if(grid[i][j] == 1)
+//                {
+//                    grid[i + 1][j] = 1;
+//                    grid[i][j] = 0;
+//                    break;
+//                }
+
+
+//            }
+
+//            if(shiftAliens)
+//                break;
+//        }
+//    }
+
     foreach(Alien *a, alienVec)
     {
         if(shiftAliens)
