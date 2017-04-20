@@ -38,6 +38,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     alienAnimationTimer->start();
     gameUpdateTimer->start();
 
+    qDebug() << "Bunker grid cell size:" << ((this->width() / 2) - (this->width() / 4));
 }
 
 void GameManager::paintEvent(QPaintEvent *e)
@@ -58,9 +59,10 @@ void GameManager::paintEvent(QPaintEvent *e)
         paint.drawLine(posX, posY, 850, posY);
         for(int j = 0; j < 16; j++)
         {
-            //Grid Coords
+            // Grid Coords
 //            paint.drawText(posX + 15, posY + 25, QString("%1, %2").arg(i).arg(j));
 
+            // Main Grid
             paint.drawLine(posX, posY, posX, posY + 50);
             posX += 50;
         }
@@ -72,6 +74,11 @@ void GameManager::paintEvent(QPaintEvent *e)
     paint.drawLine(850, 30, 850, posY);
     paint.drawLine(posX, posY, 850, posY);
 
+    // Bunker Location Grid
+    paint.drawLine(this->width() / 4, 540, this->width() / 4, 700);
+    paint.drawLine(this->width() / 2, 540, this->width() / 2, 700);
+    paint.drawLine((this->width() / 2) + (this->width() / 4), 540, (this->width() / 2) + (this->width() / 4), 700);
+
     //======================
     // Projectile Rendering
     //======================
@@ -79,6 +86,16 @@ void GameManager::paintEvent(QPaintEvent *e)
     /// DO NOT write collision logic here
     /// Handle collision logic in a seperate function
     ///  that is controlled by a seperate timer.
+    ///
+    /// To determine which bunker was hit and where, use:
+    ///    k = projectilePosX / 225
+    ///
+    ///     Bunkers are 88px X 60px
+    ///       Bunker 0 domain: 75px - 163px
+    ///       Bunker 1 domain: 295px - 383px
+    ///       Bunker 2 domain: 515px - 603px
+    ///       Bunker 3 domain: 735px - 823px
+    ///     STILL NEED EQN FOR FINDING j AND i
 
     //=================
     // Enemy Rendering
@@ -112,7 +129,7 @@ void GameManager::paintEvent(QPaintEvent *e)
         {
             for(int j = 0; j < 44; j++)
             {
-                if(bunker[i][j] == 1)
+                if(bunker[k][i][j] == 1)
                     paint.drawRect(QRect(bunkerX, bunkerY, 2, 2));
 
                 bunkerX += 2;
