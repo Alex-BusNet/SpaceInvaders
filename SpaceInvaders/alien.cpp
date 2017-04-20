@@ -6,6 +6,7 @@ Alien::Alien(int type, int posX, int posY)
     this->posX = posX;
     this->posY = posY;
     this->frame = 0;
+    direction = 1; // 0 = Left, 1 = Right
 }
 
 void Alien::drawAlien(QPainter *paint, bool updateFrame)
@@ -32,10 +33,46 @@ void Alien::drawAlien(QPainter *paint, bool updateFrame)
         if(frame == 1)
         {
             frame = 0;
+
+            if(direction == 0)
+            {
+                // Moving left
+                posX -= 25;
+            }
+            else if(direction == 1)
+            {
+                // Moving right
+                posX += 25;
+            }
         }
         else
         {
             frame = 1;
+
+            if(direction == 0)
+            {
+                // Moving left
+                posX -= 25;
+            }
+            else if(direction == 1)
+            {
+                // Moving right
+                posX += 25;
+            }
         }
+    }
+}
+
+void Alien::shiftDown()
+{
+    posY += 50;
+
+    if(direction == 1)
+    {
+        direction = 0;
+    }
+    else
+    {
+        direction = 1;
     }
 }

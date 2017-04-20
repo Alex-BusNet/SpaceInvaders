@@ -9,6 +9,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     redrawAliens = true;
     redrawPlayer = true;
     redrawBunkers = true;
+    shiftAliens = false;
 
     player = new Player(428, 630);
 
@@ -19,6 +20,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
         for(int j = 0; j < 11; j++)
         {
             alienVec.push_back(new Alien(invaders[i][j], alienX, alienY));
+            grid[i][j] = 1;
             alienX += 50;
         }
 
@@ -123,16 +125,33 @@ void GameManager::paintEvent(QPaintEvent *e)
     paint.setBrush(QBrush(Qt::white));
     // Some of this render logic may changed depending on
     //   what happens with tracking living invaders
+    for(int j = 0; j < 30; j++)
+    {
+        for(int i = 0; i < 10; i++)
+        {
+            if(grid[i][j] == 1)
+            {
+                shiftAliens = true;
+                grid[i + 1][j] = 1;
+                grid[i][j] = 0;
+                break;
+            }
+        }
+
+        if(shiftAliens)
+            break;
+    }
     foreach(Alien *a, alienVec)
     {
-        //if(redrawAliens)
-        //{
-        /// Add Update Position logic before redraw
-        //}
+        if(shiftAliens)
+        {
+            a->shiftDown();
+        }
 
         a->drawAlien(&paint, redrawAliens);
     }
 
+    shiftAliens = false;
     redrawAliens = false;
 
     //==================

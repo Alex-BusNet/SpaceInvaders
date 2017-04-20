@@ -10,9 +10,10 @@ class Alien
 public:
     Alien(int type, int posX, int posY);
     void drawAlien(QPainter *paint, bool updateFrame);
+    void shiftDown();
 
 private:
-    int type, posX, posY, frame;
+    int type, posX, posY, frame, direction;
     int alienRenders[3][2][8][12] =
     {
         // type 0, animation 0
