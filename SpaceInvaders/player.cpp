@@ -100,9 +100,9 @@ void Player::UpdatePosition()
         direction = -1;
     }
 
-    if((0 == direction) && (posX >= 55) && isMovingLeft)
+    if((0 == direction) && (posX >= 0) && isMovingLeft)
         posX -= 5;
-    else if((1 == direction) && (posX <= 795) && isMovingRight)
+    else if((1 == direction) && ((posX + 45) <= 900) && isMovingRight)
         posX += 5;
     else
         posX = posX;

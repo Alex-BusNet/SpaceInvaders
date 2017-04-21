@@ -1,5 +1,5 @@
 #include "alien.h"
-
+#define SIZE 3
 Alien::Alien(int type, int posX, int posY)
 {
     this->type = type;
@@ -18,14 +18,14 @@ void Alien::drawAlien(QPainter *paint, bool updateFrame)
         {
             if(alienRenders[type][frame][i][j] == 1)
             {
-                paint->drawRect(QRect(rX, rY, 3, 3));
+                paint->drawRect(QRect(rX, rY, SIZE, SIZE));
             }
 
-            rX += 3;
+            rX += SIZE;
         }
 
         rX = posX;
-        rY += 3;
+        rY += SIZE;
     }
 
     if(updateFrame)
@@ -33,32 +33,21 @@ void Alien::drawAlien(QPainter *paint, bool updateFrame)
         if(frame == 1)
         {
             frame = 0;
-
-            if(direction == 0)
-            {
-                // Moving left
-                posX -= 25;
-            }
-            else if(direction == 1)
-            {
-                // Moving right
-                posX += 25;
-            }
         }
         else
         {
             frame = 1;
+        }
 
-            if(direction == 0)
-            {
-                // Moving left
-                posX -= 25;
-            }
-            else if(direction == 1)
-            {
-                // Moving right
-                posX += 25;
-            }
+        if(direction == 0)
+        {
+            // Moving left
+            posX -= 25;
+        }
+        else if(direction == 1)
+        {
+            // Moving right
+            posX += 25;
         }
     }
 }

@@ -1,31 +1,37 @@
 #include "gamemanager.h"
 #include <QDebug>
 #include <QPainter>
+#define ROWS 10
+#define COLUMNS 30
+#define X_OFFSET 40
+#define Y_OFFSET 40
+#define GRID_END (X_OFFSET * COLUMNS)
 
 GameManager::GameManager(QWidget *parent) : QWidget(parent)
 {
     this->setFixedSize(900, 700);
 
     redrawAliens = true;
-    redrawPlayer = true;
+    skipRedraw = false;
     redrawBunkers = true;
     shiftAliens = false;
+    left = false;
 
     player = new Player(428, 630);
 
     // Initialize the Aliens
-    int alienX = 57, alienY = 40;
+    int alienX = 29, alienY = 45;
     for(int i = 0; i < 5; i++)
     {
         for(int j = 0; j < 11; j++)
         {
             alienVec.push_back(new Alien(invaders[i][j], alienX, alienY));
             grid[i][j] = 1;
-            alienX += 50;
+            alienX += X_OFFSET;
         }
 
-        alienX = 57;
-        alienY += 50;
+        alienX = 29;
+        alienY += Y_OFFSET;
     }
 
     alienAnimationTimer = new QTimer(this);
@@ -55,26 +61,27 @@ void GameManager::paintEvent(QPaintEvent *e)
     //=================
 
     int posX = 50, posY = 30;
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < ROWS; i++)
     {
-        paint.drawLine(posX, posY, 850, posY);
-        for(int j = 0; j < 16; j++)
+        paint.drawLine(posX, posY, GRID_END, posY);
+        for(int j = 0; j < COLUMNS; j++)
         {
             // Grid Coords
 //            paint.drawText(posX + 15, posY + 25, QString("%1, %2").arg(i).arg(j));
+//            paint.drawText(posX + 15, posY + 35, QString("%1").arg(grid[i][j]));
 
             // Main Grid
-            paint.drawLine(posX, posY, posX, posY + 50);
-            posX += 50;
+            paint.drawLine(posX, posY, posX, posY + Y_OFFSET);
+            posX += X_OFFSET;
         }
 
         posX = 50;
-        posY += 50;
+        posY += Y_OFFSET;
     }
 
     // These two lines make the grid look more complete
-    paint.drawLine(850, 30, 850, posY);
-    paint.drawLine(posX, posY, 850, posY);
+    paint.drawLine(GRID_END, 30, GRID_END, posY);
+    paint.drawLine(posX, posY, GRID_END, posY);
 
     // Bunker Location Grid
     paint.drawLine(this->width() / 4, 540, this->width() / 4, 700);
@@ -115,7 +122,7 @@ void GameManager::paintEvent(QPaintEvent *e)
     /// To determine if an invader was hit, use:
     ///     << WIP >>
     ///
-    ///     Invaders are 24px X 36px
+    ///     Invaders are 36px X 24px
     ///
 
     //=================
@@ -126,27 +133,27 @@ void GameManager::paintEvent(QPaintEvent *e)
     // Some of this render logic may changed depending on
     //   what happens with tracking living invaders
 
-    /// I know what is wrong, but it will take a bit of time to correct
-//    if(redrawAliens)
-//    {
-//        for(int j = 0; j < 30; j++)
-//        {
-//            for(int i = 0; i < 10; i++)
-//            {
-//                if(grid[i][j] == 1)
-//                {
-//                    grid[i + 1][j] = 1;
-//                    grid[i][j] = 0;
-//                    break;
-//                }
+    if(shiftAliens)
+    {
+        for(int i = ROWS - 1; i >= 0; i--)
+        {
+            for(int j = COLUMNS - 1; j >= 0; j--)
+            {
+                if(grid[i][j] == 1)
+                {
+                    if((i + 1) >= ROWS)
+                    {
+                        // Game Over
+                    }
 
+                    grid[i + 1][j] = grid[i][j];
+                    grid[i][j] = 0;
+                }
+            }
+        }
 
-//            }
-
-//            if(shiftAliens)
-//                break;
-//        }
-//    }
+        skipRedraw = true;
+    }
 
     foreach(Alien *a, alienVec)
     {
@@ -154,11 +161,80 @@ void GameManager::paintEvent(QPaintEvent *e)
         {
             a->shiftDown();
         }
-
-        a->drawAlien(&paint, redrawAliens);
+        else
+        {
+            a->drawAlien(&paint, redrawAliens);
+        }
     }
 
     shiftAliens = false;
+
+    if(redrawAliens && !skipRedraw)
+    {
+        if(left)
+        {
+            for(int i = 0; i < ROWS; i++)
+            {
+                for(int j = 0; j < COLUMNS; j++)
+                {
+                    if(grid[i][j] == 1)
+                    {
+                        if(j == 0)
+                        {
+                            left = false;
+                            shiftAliens = true;
+                            break;
+                        }
+                        else
+                        {
+                            grid[i][j - 1] = grid[i][j];
+                            grid[i][j] = 0;
+                        }
+                    }
+                }
+
+                if(shiftAliens)
+                {
+                    break;
+                }
+            }
+
+        }
+        else
+        {
+            for(int i = ROWS - 1; i >= 0; i--)
+            {
+                for(int j = COLUMNS - 1; j >= 0; j--)
+                {
+                    if(grid[i][j] == 1)
+                    {
+                        if(j == (COLUMNS - 1))
+                        {
+                            left = true;
+                            shiftAliens = true;
+                            break;
+                        }
+                        else
+                        {
+                            if(j + 1 < COLUMNS)
+                            {
+                                grid[i][j + 1] = grid[i][j];
+                                grid[i][j] = 0;
+                            }
+                        }
+                    }
+                }
+
+                if(shiftAliens)
+                {
+                    break;
+                }
+            }
+        }
+    }
+    else
+        skipRedraw = false;
+
     redrawAliens = false;
 
     //==================
@@ -209,13 +285,13 @@ void GameManager::paintEvent(QPaintEvent *e)
 
 void GameManager::keyPressEvent(QKeyEvent *event)
 {
-    player->InputHandler(static_cast<QKeyEvent*>(event), true);
+    player->InputHandler(event, true);
     event->accept();
 }
 
 void GameManager::keyReleaseEvent(QKeyEvent *event)
 {
-    player->InputHandler(static_cast<QKeyEvent*>(event), false);
+    player->InputHandler(event, false);
     event->accept();
 }
 
