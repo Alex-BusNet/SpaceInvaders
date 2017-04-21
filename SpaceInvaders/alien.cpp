@@ -42,19 +42,19 @@ void Alien::drawAlien(QPainter *paint, bool updateFrame)
         if(direction == 0)
         {
             // Moving left
-            posX -= 25;
+            posX -= 20;
         }
         else if(direction == 1)
         {
             // Moving right
-            posX += 25;
+            posX += 20;
         }
     }
 }
 
 void Alien::shiftDown()
 {
-    posY += 50;
+    posY += 40;
 
     if(direction == 1)
     {

@@ -1,26 +1,27 @@
 #include "gamemanager.h"
 #include <QDebug>
 #include <QPainter>
-#define ROWS 10
+#define ROWS 15
 #define COLUMNS 30
 #define X_OFFSET 40
 #define Y_OFFSET 40
-#define GRID_END (X_OFFSET * COLUMNS)
+#define SHIFT_AMOUNT 20
+#define GRID_END ((X_OFFSET * 11) + (SHIFT_AMOUNT * (COLUMNS - 9)) + 10)
 
 GameManager::GameManager(QWidget *parent) : QWidget(parent)
 {
     this->setFixedSize(900, 700);
 
     redrawAliens = true;
-    skipRedraw = false;
     redrawBunkers = true;
     shiftAliens = false;
     left = false;
+    pauseGame = false;
 
     player = new Player(428, 630);
 
     // Initialize the Aliens
-    int alienX = 29, alienY = 45;
+    int alienX = 32, alienY = 40;
     for(int i = 0; i < 5; i++)
     {
         for(int j = 0; j < 11; j++)
@@ -30,7 +31,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
             alienX += X_OFFSET;
         }
 
-        alienX = 29;
+        alienX = 32;
         alienY += Y_OFFSET;
     }
 
@@ -45,6 +46,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     alienAnimationTimer->start();
     gameUpdateTimer->start();
 
+    qDebug() << "Grid end:" << GRID_END;
     qDebug() << "Bunker grid cell size:" << ((this->width() / 2) - (this->width() / 4));
 }
 
@@ -60,14 +62,15 @@ void GameManager::paintEvent(QPaintEvent *e)
     // Grid Rendering;
     //=================
 
-    int posX = 50, posY = 30;
+    int posX = 30, posY = 30;
     for(int i = 0; i < ROWS; i++)
     {
         paint.drawLine(posX, posY, GRID_END, posY);
         for(int j = 0; j < COLUMNS; j++)
         {
             // Grid Coords
-//            paint.drawText(posX + 15, posY + 25, QString("%1, %2").arg(i).arg(j));
+//            paint.drawText(posX + 1, posY + 15, QString("%1").arg(i));
+//            paint.drawText(posX + 1, posY + 25, QString("%1").arg(j));
 //            paint.drawText(posX + 15, posY + 35, QString("%1").arg(grid[i][j]));
 
             // Main Grid
@@ -75,7 +78,7 @@ void GameManager::paintEvent(QPaintEvent *e)
             posX += X_OFFSET;
         }
 
-        posX = 50;
+        posX = 30;
         posY += Y_OFFSET;
     }
 
@@ -151,25 +154,21 @@ void GameManager::paintEvent(QPaintEvent *e)
                 }
             }
         }
-
-        skipRedraw = true;
     }
 
     foreach(Alien *a, alienVec)
     {
+        a->drawAlien(&paint, redrawAliens);
+
         if(shiftAliens)
         {
             a->shiftDown();
-        }
-        else
-        {
-            a->drawAlien(&paint, redrawAliens);
         }
     }
 
     shiftAliens = false;
 
-    if(redrawAliens && !skipRedraw)
+    if(redrawAliens)
     {
         if(left)
         {
@@ -232,8 +231,6 @@ void GameManager::paintEvent(QPaintEvent *e)
             }
         }
     }
-    else
-        skipRedraw = false;
 
     redrawAliens = false;
 
