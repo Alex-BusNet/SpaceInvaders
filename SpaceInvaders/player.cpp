@@ -53,7 +53,7 @@ void Player::InputHandler(QKeyEvent *e, bool isPressed)
             moveRight = true;
             break;
         case Qt::Key_Space:
-            fireLaser = true;
+            laserReady = true;
             break;
         default:
             break;
@@ -70,7 +70,7 @@ void Player::InputHandler(QKeyEvent *e, bool isPressed)
             moveRight = false;
             break;
         case Qt::Key_Space:
-            fireLaser = false;
+            laserReady = false;
             break;
         default:
             break;
@@ -122,5 +122,12 @@ void Player::UpdatePosition()
           << QPoint(posX + 45, posY + 20)   // 9
           << QPoint(posX + 45, posY + 30)   // 10
           << QPoint(posX, posY + 30);       // 11
+}
+
+void Player::Fire()
+{
+    laserReady = false;
+    //store new bullet in array
+    //GameManager::bullets[]
 }
 

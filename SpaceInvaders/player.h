@@ -16,11 +16,13 @@ public:
     void InputHandler(QKeyEvent *e, bool isPressed);
     void UpdatePosition();
 private:
+    void Fire();
     QPolygon laser;
     int posX, posY;
     int lives;
     int direction, lastDirection; // -1 = no movement, 0 = left, 1 = right
-    bool fireLaser, moveLeft, moveRight, isMovingLeft, isMovingRight;
+    bool laserReady, moveLeft, moveRight, isMovingLeft, isMovingRight;
+
 };
 
 #endif // PLAYER_H

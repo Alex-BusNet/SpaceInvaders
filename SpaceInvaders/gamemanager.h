@@ -3,6 +3,7 @@
 
 #include "alien.h"
 #include "player.h"
+#include "bullet.h"
 
 #include <QPaintEvent>
 #include <QTimer>
@@ -17,12 +18,16 @@ public:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
 
+    Bullet* bullets = new Bullet[5];
+
 private:
     bool redrawAliens;
     bool redrawBunkers;
     bool shiftAliens;
     bool left;
     bool pauseGame;
+
+    int invadersTopRow, invadersLeftColumn;
 
     int invaders[5][11] =
     {

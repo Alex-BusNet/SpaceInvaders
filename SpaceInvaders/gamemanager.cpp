@@ -10,18 +10,19 @@
 
 GameManager::GameManager(QWidget *parent) : QWidget(parent)
 {
-    this->setFixedSize(900, 700);
+    this->setFixedSize(900, 750);
 
     redrawAliens = true;
     redrawBunkers = true;
     shiftAliens = false;
     left = false;
     pauseGame = false;
-
-    player = new Player(428, 630);
+    invadersTopRow = 0;
+    invadersLeftColumn = 0;
+    player = new Player(428, 680);
 
     // Initialize the Aliens
-    int alienX = 32, alienY = 40;
+    int alienX = 32, alienY = 80;
     for(int i = 0; i < 5; i++)
     {
         for(int j = 0; j < 11; j++)
@@ -45,8 +46,6 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
 
     alienAnimationTimer->start();
     gameUpdateTimer->start();
-
-    qDebug() << "Grid end:" << GRID_END;
     qDebug() << "Bunker grid cell size:" << ((this->width() / 2) - (this->width() / 4));
 }
 
@@ -62,7 +61,8 @@ void GameManager::paintEvent(QPaintEvent *e)
     // Grid Rendering;
     //=================
 
-    int posX = 30, posY = 30;
+    int posX = 30, posY = 70;
+    paint.drawLine(posX, 30, GRID_END, 30);
     for(int i = 0; i < ROWS; i++)
     {
         paint.drawLine(posX, posY, GRID_END, posY);
@@ -87,9 +87,9 @@ void GameManager::paintEvent(QPaintEvent *e)
     paint.drawLine(posX, posY, GRID_END, posY);
 
     // Bunker Location Grid
-    paint.drawLine(this->width() / 4, 540, this->width() / 4, 700);
-    paint.drawLine(this->width() / 2, 540, this->width() / 2, 700);
-    paint.drawLine((this->width() / 2) + (this->width() / 4), 540, (this->width() / 2) + (this->width() / 4), 700);
+    paint.drawLine(this->width() / 4, 590, this->width() / 4, 750);
+    paint.drawLine(this->width() / 2, 590, this->width() / 2, 750);
+    paint.drawLine((this->width() / 2) + (this->width() / 4), 590, (this->width() / 2) + (this->width() / 4), 750);
 
     //======================
     // Projectile Rendering
@@ -99,7 +99,7 @@ void GameManager::paintEvent(QPaintEvent *e)
     /// Handle collision logic in a seperate function
     ///  that is controlled by a seperate timer.
     ///
-    /// Projectile size: 1px X 3px OR 2px X 5px (Pick one, I don't care which.)
+    /// Projectile size: 1px X 3px
     ///     You could make them bigger just adjust how many pixels are removed in the i direction
     ///     Use (i-1) and check for (i-1) >= 0
     ///
@@ -123,7 +123,25 @@ void GameManager::paintEvent(QPaintEvent *e)
     ///
     ///
     /// To determine if an invader was hit, use:
-    ///     << WIP >>
+    ///     30 = X grid offset
+    ///     80 = Y grid offset
+    ///
+    ///     Find grid coord to determine if an alien is present:
+    ///         grid_j = (bulletPosX - 30) / 40;
+    ///         grid_i = (bulletPosY - 80) / 40;
+    ///
+    ///     Find invader coord to determine type:
+    ///         invader_i = grid_i - invadersTopRow;
+    ///         invader_j = grid_j - invadersLeftColumn
+    ///
+    ///     Find bullet position relative to the alien:
+    ///         bulletRelPosX = grid_i % 40;
+    ///         bulletRelPosY = grid_j % 40;
+    ///             if(bulletRelPosX >= 4 && bulletRelPosX <= 40) <- Need to do more testing to confirm these numbers
+    ///                 bulletRelPosX = (bulletRelPosX - 4) / 3;
+    ///              ^ Similar equation for bullerRelPosY
+    ///
+    ///     a->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]);
     ///
     ///     Invaders are 36px X 24px
     ///
@@ -148,36 +166,43 @@ void GameManager::paintEvent(QPaintEvent *e)
                     {
                         // Game Over
                     }
-
-                    grid[i + 1][j] = grid[i][j];
-                    grid[i][j] = 0;
+                    else
+                    {
+                        grid[i + 1][j] = grid[i][j];
+                        grid[i][j] = 0;
+                    }
                 }
             }
         }
+
+        invadersTopRow++;
     }
 
     foreach(Alien *a, alienVec)
     {
-        a->drawAlien(&paint, redrawAliens);
-
-        if(shiftAliens)
-        {
-            a->shiftDown();
-        }
+        a->drawAlien(&paint, redrawAliens, shiftAliens);
     }
 
-    shiftAliens = false;
+
+    if(redrawAliens && shiftAliens)
+    {
+        shiftAliens = false;
+    }
 
     if(redrawAliens)
     {
         if(left)
         {
+            // Count how many consecutive zeros are in the each column
+            int count[COLUMNS] = {};
             for(int i = 0; i < ROWS; i++)
             {
                 for(int j = 0; j < COLUMNS; j++)
                 {
                     if(grid[i][j] == 1)
                     {
+                        // Reset the count.
+                        count[j] = 0;
                         if(j == 0)
                         {
                             left = false;
@@ -190,6 +215,13 @@ void GameManager::paintEvent(QPaintEvent *e)
                             grid[i][j] = 0;
                         }
                     }
+                    else
+                    {
+                        if(count[j] == ROWS)
+                            invadersLeftColumn = j + 1;
+                        else
+                            count[j] = count[j] + 1;
+                    }
                 }
 
                 if(shiftAliens)
@@ -201,12 +233,16 @@ void GameManager::paintEvent(QPaintEvent *e)
         }
         else
         {
+            // Count how many consecutive zeros are in the each column
+            int count[COLUMNS] = {};
             for(int i = ROWS - 1; i >= 0; i--)
             {
                 for(int j = COLUMNS - 1; j >= 0; j--)
                 {
                     if(grid[i][j] == 1)
                     {
+                        //Reset the count
+                        count[j] = 0;
                         if(j == (COLUMNS - 1))
                         {
                             left = true;
@@ -221,6 +257,14 @@ void GameManager::paintEvent(QPaintEvent *e)
                                 grid[i][j] = 0;
                             }
                         }
+
+                    }
+                    else
+                    {
+                        if((count[j] == ROWS) && (j == (invadersLeftColumn + 1)))
+                            invadersLeftColumn++;
+                        else
+                            count[j] = count[j] + 1;
                     }
                 }
 
@@ -240,7 +284,7 @@ void GameManager::paintEvent(QPaintEvent *e)
 
     paint.setBrush(QBrush(Qt::green));
     paint.setPen(QPen(Qt::green));
-    int startX = 75, bunkerX = 75, bunkerY = 550;
+    int startX = 75, bunkerX = 75, bunkerY = 590;
     for(int k = 0; k < 4; k++)
     {
         for(int i = 0; i < 30; i++)
@@ -256,7 +300,8 @@ void GameManager::paintEvent(QPaintEvent *e)
             bunkerY += 2;
             bunkerX = startX;
         }
-        bunkerY = 550;
+
+        bunkerY = 590;
         startX = 75 + (220 * (k + 1));
     }
 
@@ -271,10 +316,10 @@ void GameManager::paintEvent(QPaintEvent *e)
     // UI Rendering
     //================
 
-    paint.drawLine(QLine(0, 670, 900, 670));
+    paint.drawLine(QLine(0, 720, 900, 720));
     QFont font("TypeWriter", 10, 1);
     paint.setFont(font);
-    paint.drawText(20, 690, QString("%1").arg(player->GetLivesRemaining()));
+    paint.drawText(20, 735, QString("%1").arg(player->GetLivesRemaining()));
     paint.drawText(20, 20, "<<ADD SCORE TRACKER>>");
     paint.drawText(380, 20, "<<ADD HIGH SCORE>>");
     /// Add score tracker

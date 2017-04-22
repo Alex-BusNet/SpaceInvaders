@@ -16,11 +16,13 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     gamemanager.cpp \
     player.cpp \
-    alien.cpp
+    alien.cpp \
+    bullet.cpp
 
 HEADERS  += mainwindow.h \
     gamemanager.h \
     player.h \
-    alien.h
+    alien.h \
+    bullet.h
 
 FORMS    += mainwindow.ui
