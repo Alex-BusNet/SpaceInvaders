@@ -13,28 +13,26 @@ Player::Player(int startX, int startY)
     isMovingRight = false;
     moveLeft = false;
     moveRight = false;
-
-    /// Change this to an array
-    // Player Bounding rect size: 45px X 30px
-    laser << QPoint(posX, posY + 20)        // 0
-          << QPoint(posX + 5, posY + 15)    // 1
-          << QPoint(posX + 15, posY + 15)   // 2
-          << QPoint(posX + 18, posY + 3)    // 3
-          << QPoint(posX + 20, posY + 3)    // 3.5
-          << QPoint(posX + 20, posY)        // 4
-          << QPoint(posX + 25, posY)        // 5
-          << QPoint(posX + 25, posY + 3)    // 6
-          << QPoint(posX + 27, posY + 3)    // 6.5
-          << QPoint(posX + 30, posY + 15)   // 7
-          << QPoint(posX + 40, posY + 15)   // 8
-          << QPoint(posX + 45, posY + 20)   // 9
-          << QPoint(posX + 45, posY + 30)   // 10
-          << QPoint(posX, posY + 30);       // 11
 }
 
 Player::drawPlayer(QPainter *paint)
 {
-    paint->drawPolygon(laser);
+    int rX = posX, rY = posY;
+    for(int i = 0; i < 9; i++)
+    {
+        for(int j = 0; j < 19; j++)
+        {
+            if(playerRender[i][j] == 1)
+            {
+                paint->drawRect(rX, rY, 2, 3);
+            }
+
+            rX += 3;
+        }
+
+        rX = posX;
+        rY += 4;
+    }
 }
 
 int Player::GetLivesRemaining()
@@ -106,22 +104,6 @@ void Player::UpdatePosition()
         posX += 5;
     else
         posX = posX;
-
-    laser.clear();
-    laser << QPoint(posX, posY + 20)        // 0
-          << QPoint(posX + 5, posY + 15)    // 1
-          << QPoint(posX + 15, posY + 15)   // 2
-          << QPoint(posX + 18, posY + 3)    // 3
-          << QPoint(posX + 20, posY + 3)    // 3.5
-          << QPoint(posX + 20, posY)        // 4
-          << QPoint(posX + 25, posY)        // 5
-          << QPoint(posX + 25, posY + 3)    // 6
-          << QPoint(posX + 27, posY + 3)    // 6.5
-          << QPoint(posX + 30, posY + 15)   // 7
-          << QPoint(posX + 40, posY + 15)   // 8
-          << QPoint(posX + 45, posY + 20)   // 9
-          << QPoint(posX + 45, posY + 30)   // 10
-          << QPoint(posX, posY + 30);       // 11
 }
 
 void Player::ResetLaser()
@@ -133,6 +115,6 @@ void Player::Fire()
 {
     qDebug() << "fire";
     laserReady = false;
-    GameManager::addBullet(1, posX + 18, posY + 6);
+    GameManager::addBullet(1, posX + 28, posY + 6);
 }
 

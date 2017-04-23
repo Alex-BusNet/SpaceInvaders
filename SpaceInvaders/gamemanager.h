@@ -20,9 +20,6 @@ public:
     void keyReleaseEvent(QKeyEvent *event);
     static void addBullet(bool player, int posX, int posY);
 
-public slots:
-    void updateBullets();
-
 private:
     bool redrawAliens;
     bool redrawBunkers;
@@ -211,7 +208,6 @@ private:
     Player* player;
 
     QVector<Alien*> alienVec;
-//    static Bullet *bullets[5];// = {NULL,NULL,NULL,NULL,NULL};
 
     QTimer *alienAnimationTimer;
     QTimer *gameUpdateTimer;
@@ -221,6 +217,7 @@ signals:
 public slots:
 
 private slots:
+    void updateBullets();
     void updateAliens();
 };
 

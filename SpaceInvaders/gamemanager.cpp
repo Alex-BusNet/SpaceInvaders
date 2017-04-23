@@ -19,7 +19,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     pauseGame = false;
     invadersTopRow = 0;
     invadersLeftColumn = 0;
-    player = new Player(428, 680);
+    player = new Player(422, 680);
 
     // Initialize the Aliens
     int alienX = 32, alienY = 80;
@@ -394,13 +394,14 @@ void GameManager::addBullet(bool player, int posX, int posY)
 void GameManager::updateBullets()
 {
     for(int i = 0; i < 5; i++)
+    {
         if(bullets[i] != NULL)
         {
             bullets[i]->UpdatePos();
 
             /// Add collision checks here.
 
-            if(bullets[i]->posY <= 70)
+            if(bullets[i]->GetPosY() <= 30)
             {
                 bullets[i] = NULL;
                 if(i == 0)
@@ -409,10 +410,18 @@ void GameManager::updateBullets()
                 }
                 else
                 {
-                    alienVec.at(i - 1)->ResetFire();
+                    /// invader_i = rand() % 40;
+                    /// invader_j = rand() % 40;
+                    ///     if(grid[i][j] == 1)
+                    ///     {
+                    ///         invader_i = grid_i - invadersTopRow;
+                    ///         invader_j = grid_j - invadersLeftColumn;
+                    ///         alienVec.at(invader_i + invader_j)->ResetFire();
+                    ///     }
                 }
             }
         }
+    }
 }
 
 void GameManager::updateAliens()
