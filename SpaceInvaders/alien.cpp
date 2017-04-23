@@ -82,7 +82,7 @@ void Alien::shiftDown()
     }
 }
 
-void Alien::CheckCollision(int bulletX, int bulletY, int type)
+bool Alien::CheckCollision(int bulletX, int bulletY, int type)
 {
     if(alienRenders[type][frame][bulletY][bulletX] == 1)
         return true;

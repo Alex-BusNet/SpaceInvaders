@@ -11,7 +11,7 @@ public:
     Alien(int type, int posX, int posY);
     void drawAlien(QPainter *paint, bool updateFrame, bool shiftDown);
     void shiftDown();
-    void CheckCollision(int bulletX, int bulletY, int type);
+    bool CheckCollision(int bulletX, int bulletY, int type);
 
 private:
     int type, posX, posY, frame, direction;

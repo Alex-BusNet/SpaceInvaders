@@ -137,11 +137,16 @@ void GameManager::paintEvent(QPaintEvent *e)
     ///     Find bullet position relative to the alien:
     ///         bulletRelPosX = grid_i % 40;
     ///         bulletRelPosY = grid_j % 40;
-    ///             if(bulletRelPosX >= 4 && bulletRelPosX <= 40) <- Need to do more testing to confirm these numbers
-    ///                 bulletRelPosX = (bulletRelPosX - 4) / 3;
-    ///              ^ Similar equation for bullerRelPosY
+    ///             if(bulletRelPosX >= 2 && bulletRelPosX <= 38)
+    ///             {
+    ///                 bulletRelPosX = (bulletRelPosX - 2) / 3;
     ///
-    ///     a->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]);
+    ///                 if(bulletRelPosY >= 10 && bulletRelPosY <= 34)
+    ///                 {
+    ///                     bulletRelPosY = (bulletRelPosY - 10) / 3;
+    ///                     a->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]);
+    ///                 }
+    ///             }
     ///
     ///     Invaders are 36px X 24px
     ///
