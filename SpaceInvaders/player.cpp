@@ -1,8 +1,10 @@
 #include "player.h"
+#include "gamemanager.h"
 #include <QDebug>
 
 Player::Player(int startX, int startY)
 {
+    laserReady = true;
     posX = startX;
     posY = startY;
     lives = 3;
@@ -53,7 +55,8 @@ void Player::InputHandler(QKeyEvent *e, bool isPressed)
             moveRight = true;
             break;
         case Qt::Key_Space:
-            laserReady = true;
+            if(laserReady)
+                Fire();
             break;
         default:
             break;
@@ -68,9 +71,6 @@ void Player::InputHandler(QKeyEvent *e, bool isPressed)
             break;
         case Qt::Key_D:
             moveRight = false;
-            break;
-        case Qt::Key_Space:
-            laserReady = false;
             break;
         default:
             break;
@@ -124,10 +124,15 @@ void Player::UpdatePosition()
           << QPoint(posX, posY + 30);       // 11
 }
 
+void Player::ResetLaser()
+{
+    laserReady = true;
+}
+
 void Player::Fire()
 {
+    qDebug() << "fire";
     laserReady = false;
-    //store new bullet in array
-    //GameManager::bullets[]
+    GameManager::addBullet(1, posX + 18, posY + 6);
 }
 

@@ -1,4 +1,5 @@
 #include "bullet.h"
+#include <QDebug>
 
 Bullet::Bullet(bool player, int posX, int posY)
 {
@@ -14,10 +15,11 @@ void Bullet::drawBullet(QPainter *painter)
 
 void Bullet::UpdatePos()
 {
-    if(player = 1){
-        //move up
+    if(player)
+    {
+        posY -= 3;
     }else{
-        //move down
+        posY += 3;
     }
 }
 

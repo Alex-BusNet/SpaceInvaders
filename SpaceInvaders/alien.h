@@ -12,9 +12,12 @@ public:
     void drawAlien(QPainter *paint, bool updateFrame, bool shiftDown);
     void shiftDown();
     bool CheckCollision(int bulletX, int bulletY, int type);
+    void Fire();
+    void ResetFire();
 
 private:
     int type, posX, posY, frame, direction;
+    bool canFire;
     int alienRenders[3][2][8][12] =
     {
         // type 0, animation 0

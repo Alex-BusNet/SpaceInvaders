@@ -44,8 +44,13 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     gameUpdateTimer->setInterval(17);
     connect(gameUpdateTimer, SIGNAL(timeout()), this, SLOT(update()));
 
+    bulletUpdateTimer = new QTimer(this);
+    bulletUpdateTimer->setInterval(15);
+    connect(bulletUpdateTimer, SIGNAL(timeout()), this, SLOT(updateBullets()));
+
     alienAnimationTimer->start();
     gameUpdateTimer->start();
+    bulletUpdateTimer->start();
     qDebug() << "Bunker grid cell size:" << ((this->width() / 2) - (this->width() / 4));
 }
 
@@ -95,6 +100,11 @@ void GameManager::paintEvent(QPaintEvent *e)
     // Projectile Rendering
     //======================
 
+
+    for(int i = 0; i < 5; i++){
+        if(bullets[i] != NULL)
+            bullets[i]->drawBullet(&paint);
+    }
     /// DO NOT write collision logic here
     /// Handle collision logic in a seperate function
     ///  that is controlled by a seperate timer.
@@ -104,12 +114,32 @@ void GameManager::paintEvent(QPaintEvent *e)
     ///     Use (i-1) and check for (i-1) >= 0
     ///
     /// To determine if a bunker was hit, which bunker was hit, and where, use:
-    ///    k = projectilePosX / 225
-    ///    j = projectilePosX - ((75 * (k + 1) + (220 * k))
-    ///    i = 550 - projectilePosY
-    ///
-    ///    Be sure to add checks for k, j, and i >= 0 AND j < 44 AND i < 30 AND k < 4
-    ///     before accessing the arrays.
+    ///     for(int h = 0; h < 5; h++)
+    ///     {
+    ///         if(bullets[h] != NULL)
+    ///         {
+    ///             if(bullets[h]->GetPosY() > 580)
+    ///             {
+    ///                 bunker_k = bullets[h]->GetPosX() / 225;
+    ///                 bunker_j = bullets[h]->GetPosX() - ((75 * (bunker_k + 1) + (220 * bunker_k));
+    ///                 bunker_i = 550 - bullets[h]->GetPosY();
+    ///                 if(bunker_i >= 0 && bunker_j >= 0 && bunker_j < 44 && bunker_k >= 0 && bunker_k < 4)
+    ///                 {
+    ///                     if(bunkers[bunker_k][bunker_i][bunker_j] == 1)
+    ///                     {
+    ///                         section_i = bunker_i % 11;
+    ///                         section_j = bunker_j % 5;
+    ///                         for(int i = (section_i * 6); i < ((section_i + 1) *6 ); i++)
+    ///                         {
+    ///                             for(int j = (section_j * 4); j < ((section_j + 1) * 4); j++)
+    ///                             {
+    ///                                 bunkers[bunker_k][i][j] = 0;
+    ///                             }
+    ///                         }
+    ///                 }
+    ///             }
+    ///         }
+    ///     }
     ///
     ///     Bunkers are 88px X 60px
     ///       Bunker 0 domain: 75px - 163px
@@ -132,7 +162,7 @@ void GameManager::paintEvent(QPaintEvent *e)
     ///
     ///     Find invader coord to determine type:
     ///         invader_i = grid_i - invadersTopRow;
-    ///         invader_j = grid_j - invadersLeftColumn
+    ///         invader_j = grid_j - invadersLeftColumn;
     ///
     ///     Find bullet position relative to the alien:
     ///         bulletRelPosX = grid_i % 40;
@@ -342,7 +372,62 @@ void GameManager::keyReleaseEvent(QKeyEvent *event)
     event->accept();
 }
 
+void GameManager::addBullet(bool player, int posX, int posY)
+{
+    if(player)
+    {
+        bullets[0] = new Bullet(true, posX, posY);
+    }
+    else
+    {
+        for(int i = 1; i < 5; i++)
+        {
+            if(bullets[i] == NULL)
+            {
+                bullets[i] = new Bullet(false, posX, posY);
+                break;
+            }
+        }
+    }
+}
+
+void GameManager::updateBullets()
+{
+    for(int i = 0; i < 5; i++)
+        if(bullets[i] != NULL)
+        {
+            bullets[i]->UpdatePos();
+
+            /// Add collision checks here.
+
+            if(bullets[i]->posY <= 70)
+            {
+                bullets[i] = NULL;
+                if(i == 0)
+                {
+                    player->ResetLaser();
+                }
+                else
+                {
+                    alienVec.at(i - 1)->ResetFire();
+                }
+            }
+        }
+}
+
 void GameManager::updateAliens()
 {
     redrawAliens = true;
 }
+
+/// alienFire Logic
+///
+/// invader_i = rand() % 40;
+/// invader_j = rand() % 40;
+///     if(grid[i][j] == 1)
+///     {
+///         invader_i = grid_i - invadersTopRow;
+///         invader_j = grid_j - invadersLeftColumn;
+///         alienVec.at(invader_i + invader_j)->Fire();
+///     }
+///

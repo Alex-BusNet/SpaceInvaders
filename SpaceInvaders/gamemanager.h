@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QWidget>
 
+class Player;
 class GameManager : public QWidget
 {
     Q_OBJECT
@@ -17,8 +18,10 @@ public:
     void paintEvent(QPaintEvent *e);
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
+    static void addBullet(bool player, int posX, int posY);
 
-    Bullet* bullets = new Bullet[5];
+public slots:
+    void updateBullets();
 
 private:
     bool redrawAliens;
@@ -208,9 +211,11 @@ private:
     Player* player;
 
     QVector<Alien*> alienVec;
+//    static Bullet *bullets[5];// = {NULL,NULL,NULL,NULL,NULL};
 
     QTimer *alienAnimationTimer;
     QTimer *gameUpdateTimer;
+    QTimer *bulletUpdateTimer;
 signals:
 
 public slots:
@@ -218,5 +223,7 @@ public slots:
 private slots:
     void updateAliens();
 };
+
+static Bullet* bullets[5];
 
 #endif // GAMEMANAGER_H

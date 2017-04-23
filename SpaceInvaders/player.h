@@ -15,6 +15,8 @@ public:
     int GetLivesRemaining();
     void InputHandler(QKeyEvent *e, bool isPressed);
     void UpdatePosition();
+    void ResetLaser();
+
 private:
     void Fire();
     QPolygon laser;

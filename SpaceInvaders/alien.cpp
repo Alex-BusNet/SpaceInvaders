@@ -89,3 +89,19 @@ bool Alien::CheckCollision(int bulletX, int bulletY, int type)
     else
         return false;
 }
+
+void Alien::Fire()
+{
+    /// if(canFire)
+    /// {
+    ///     canFire = false;
+    ///     GameManager::addBullet(false, posX + 20, y); <- Y is the bottom center of the alien.
+    ///                                                     Still need to figure out how to calculate
+    ///                                                       this.
+    /// }
+}
+
+void Alien::ResetFire()
+{
+    canFire = true;
+}
