@@ -29,11 +29,11 @@ void Bullet::UpdatePos()
 {
     if(player)
     {
-        posY -= 3;
+        posY -= 5;
     }
     else
     {
-        posY += 3;
+        posY += 5;
     }
 
 

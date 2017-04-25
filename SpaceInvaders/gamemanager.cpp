@@ -89,12 +89,15 @@ void GameManager::paintEvent(QPaintEvent *e)
 
     // These two lines make the grid look more complete
     paint.drawLine(GRID_END, 30, GRID_END, posY);
-    paint.drawLine(posX, posY, GRID_END, posY);
+//    paint.drawLine(posX, 590, GRID_END, 590);
+    paint.drawLine(posX, 670, GRID_END, 670);
 
     // Bunker Location Grid
-    paint.drawLine(this->width() / 4, 590, this->width() / 4, 750);
-    paint.drawLine(this->width() / 2, 590, this->width() / 2, 750);
-    paint.drawLine((this->width() / 2) + (this->width() / 4), 590, (this->width() / 2) + (this->width() / 4), 750);
+    paint.drawLine(30, 590, 30, 720);
+    paint.drawLine(240, 590, 240, 720);
+    paint.drawLine(450, 590, 450, 720);
+    paint.drawLine(650, 590, 650, 720);
+    paint.drawLine(870, 590, 870, 720);
 
     //======================
     // Projectile Rendering
@@ -244,7 +247,7 @@ void GameManager::paintEvent(QPaintEvent *e)
 
     paint.setBrush(QBrush(Qt::green));
     paint.setPen(QPen(Qt::green));
-    int startX = 75, bunkerX = 75, bunkerY = 590;
+    int startX = 91, bunkerX = 91, bunkerY = 590;
     for(int k = 0; k < 4; k++)
     {
         for(int i = 0; i < 30; i++)
@@ -257,18 +260,17 @@ void GameManager::paintEvent(QPaintEvent *e)
                 bunkerX += 2;
             }
 
-            bunkerY += 2;
+            bunkerY +=2;
             bunkerX = startX;
         }
 
         bunkerY = 590;
-        startX = 75 + (220 * (k + 1));
+        startX = 91 + (210 * (k + 1));
     }
 
     //==================
     // Player Rendering
     //==================
-
     player->UpdatePosition();
     player->drawPlayer(&paint);
 
@@ -331,23 +333,20 @@ void GameManager::updateBullets()
             //=================
             if(bullets[h]->GetPosY() >= 590 && bullets[h]->GetPosY() <= 650)
             {
-                qDebug() << "Checking bunker collisions";
                 // Bunker Coordinates calculations
                 int bunker_k = bullets[h]->GetPosX() / 225;
-                int bunker_j = (bullets[h]->GetPosX() - (75 + (220 * bunker_k)));
-                int bunker_i = (bullets[h]->GetPosY() - 580) / 2;
+                int bunker_j = (bullets[h]->GetPosX() - (91 + (210 * bunker_k))) / 2;
+                int bunker_i = ((bullets[h]->GetPosY() - 590) / 2) - 1;
 
-                qDebug() << "i:" << bunker_i << "j:" << bunker_j << "k:" << bunker_k;
-                if(bunker_i >= 0 && bunker_j >= 0 && bunker_j < 44 && bunker_k >= 0 && bunker_k < 4)
+                if(bunker_i >= 0 && bunker_i <= 29 && bunker_j >= 0 && bunker_j < 44 && bunker_k >= 0 && bunker_k < 4)
                 {
                     // Check if the location in the bunker is valid
                     if(bunker[bunker_k][bunker_i][bunker_j] == 1)
                     {
-                        qDebug() << "Remove bunker section";
                         deleteBullet = true;
-                        int section_i = bunker_i % 11;
-                        int section_j = bunker_j % 5;
-                        for(int i = (section_i * 6); i < ((section_i + 1) * 6); i++)
+                        int section_i = bunker_i / 5;
+                        int section_j = bunker_j / 4;
+                        for(int i = (section_i * 5); i < ((section_i + 1) * 5); i++)
                         {
                             for(int j = (section_j * 4); j < ((section_j + 1) * 4); j++)
                             {
@@ -357,17 +356,12 @@ void GameManager::updateBullets()
                     }
                 }
             }
-
-            /// To determine if the player was hit, use:
-            ///     << WIP >>
-            ///
-            ///
-
+            else
             //=================
             // Alien Collision
             //=================
-            if(!deleteBullet)
             {
+                qDebug() << "Checking alien collisions";
                 int grid_j = (bullets[h]->GetPosX() - 30) / 40;
                 int grid_i = (bullets[h]->GetPosY() - 80) / 40;
 
@@ -397,6 +391,11 @@ void GameManager::updateBullets()
                     }
                 }
             }
+
+            /// To determine if the player was hit, use:
+            ///     << WIP >>
+            ///
+            ///
 
             // Bullet has reached edge of play area
             if(bullets[h]->GetPosY() <= 30 || deleteBullet)
