@@ -115,6 +115,6 @@ void Player::Fire()
 {
     qDebug() << "fire";
     laserReady = false;
-    GameManager::addBullet(1, posX + 28, posY + 6);
+    GameManager::addBullet(true, posX + 28, posY + 6);
 }
 

@@ -203,11 +203,10 @@ private:
         }
 
     };
-
-    QVector<QPolygon*> bunkers;
     Player* player;
 
     QVector<Alien*> alienVec;
+    int alienFireTracker[4] = { -1, -1, -1, -1 };
 
     QTimer *alienAnimationTimer;
     QTimer *gameUpdateTimer;
@@ -222,5 +221,6 @@ private slots:
 };
 
 static Bullet* bullets[5];
+static int bulletIndex = 0;
 
 #endif // GAMEMANAGER_H

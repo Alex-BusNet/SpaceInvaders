@@ -11,7 +11,7 @@ Bullet::Bullet(bool player, int posX, int posY)
 
 void Bullet::drawBullet(QPainter *painter)
 {
-    painter->drawLine(posX, posY, posX, posY + 3);
+    painter->drawLine(posX, posY, posX, posY + 5);
 }
 
 int Bullet::GetPosX()
