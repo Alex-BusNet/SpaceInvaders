@@ -211,6 +211,7 @@ private:
     QTimer *alienAnimationTimer;
     QTimer *gameUpdateTimer;
     QTimer *bulletUpdateTimer;
+    QTimer *alienBulletTimer;
 signals:
 
 public slots:
@@ -218,6 +219,7 @@ public slots:
 private slots:
     void updateBullets();
     void updateAliens();
+    void alienFireSelect();
 };
 
 static Bullet* bullets[5];

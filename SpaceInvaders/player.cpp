@@ -15,7 +15,7 @@ Player::Player(int startX, int startY)
     moveRight = false;
 }
 
-Player::drawPlayer(QPainter *paint)
+void Player::drawPlayer(QPainter *paint)
 {
     int rX = posX, rY = posY;
     for(int i = 0; i < 9; i++)
@@ -98,9 +98,9 @@ void Player::UpdatePosition()
         direction = -1;
     }
 
-    if((0 == direction) && (posX >= 0) && isMovingLeft)
+    if((0 == direction) && (posX >= 18) && isMovingLeft)
         posX -= 5;
-    else if((1 == direction) && ((posX + 45) <= 900) && isMovingRight)
+    else if((1 == direction) && ((posX + 45) <= 850) && isMovingRight)
         posX += 5;
     else
         posX = posX;

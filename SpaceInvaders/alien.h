@@ -18,7 +18,7 @@ public:
 private:
     int type, posX, posY, frame, direction;
     bool canFire;
-    int alienRenders[3][2][8][12] =
+    int alienRenders[3][2][8][12] = //[type][frame][i][j]
     {
         // type 0, animation 0
         {

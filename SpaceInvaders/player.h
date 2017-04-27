@@ -11,7 +11,7 @@ class Player
 {
 public:
     Player(int startX, int startY);
-    drawPlayer(QPainter *paint);
+    void drawPlayer(QPainter *paint);
     int GetLivesRemaining();
     void InputHandler(QKeyEvent *e, bool isPressed);
     void UpdatePosition();

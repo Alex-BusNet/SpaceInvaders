@@ -48,6 +48,10 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     bulletUpdateTimer->setInterval(15);
     connect(bulletUpdateTimer, SIGNAL(timeout()), this, SLOT(updateBullets()));
 
+    alienBulletTimer = new QTimer(this);
+    alienBulletTimer->setInterval(15);
+    connect(alienBulletTimer, SIGNAL(timeout()), this, SLOT(alienFireSelect()));
+
     alienAnimationTimer->start();
     gameUpdateTimer->start();
     bulletUpdateTimer->start();
@@ -114,32 +118,6 @@ void GameManager::paintEvent(QPaintEvent *e)
     //=================
 
     paint.setBrush(QBrush(Qt::white));
-    // Some of this render logic may changed depending on
-    //   what happens with tracking living invaders
-
-    if(shiftAliens)
-    {
-        for(int i = ROWS - 1; i >= 0; i--)
-        {
-            for(int j = COLUMNS - 1; j >= 0; j--)
-            {
-                if(grid[i][j] == 1)
-                {
-                    if((i + 1) >= ROWS)
-                    {
-                        // Game Over
-                    }
-                    else
-                    {
-                        grid[i + 1][j] = grid[i][j];
-                        grid[i][j] = 0;
-                    }
-                }
-            }
-        }
-
-        invadersTopRow++;
-    }
 
     foreach(Alien *a, alienVec)
     {
@@ -150,93 +128,6 @@ void GameManager::paintEvent(QPaintEvent *e)
     if(redrawAliens && shiftAliens)
     {
         shiftAliens = false;
-    }
-
-    if(redrawAliens)
-    {
-        if(left)
-        {
-            // Count how many consecutive zeros are in the each column
-            int count[COLUMNS] = {};
-            for(int i = 0; i < ROWS; i++)
-            {
-                for(int j = 0; j < COLUMNS; j++)
-                {
-                    if(grid[i][j] == 1)
-                    {
-                        // Reset the count.
-                        count[j] = 0;
-                        if(j == 0)
-                        {
-                            left = false;
-                            shiftAliens = true;
-                            break;
-                        }
-                        else
-                        {
-                            grid[i][j - 1] = grid[i][j];
-                            grid[i][j] = 0;
-                        }
-                    }
-                    else
-                    {
-                        if(count[j] == ROWS)
-                            invadersLeftColumn = j + 1;
-                        else
-                            count[j] = count[j] + 1;
-                    }
-                }
-
-                if(shiftAliens)
-                {
-                    break;
-                }
-            }
-
-        }
-        else
-        {
-            // Count how many consecutive zeros are in the each column
-            int count[COLUMNS] = {};
-            for(int i = ROWS - 1; i >= 0; i--)
-            {
-                for(int j = COLUMNS - 1; j >= 0; j--)
-                {
-                    if(grid[i][j] == 1)
-                    {
-                        //Reset the count
-                        count[j] = 0;
-                        if(j == (COLUMNS - 1))
-                        {
-                            left = true;
-                            shiftAliens = true;
-                            break;
-                        }
-                        else
-                        {
-                            if(j + 1 < COLUMNS)
-                            {
-                                grid[i][j + 1] = grid[i][j];
-                                grid[i][j] = 0;
-                            }
-                        }
-
-                    }
-                    else
-                    {
-                        if((count[j] == ROWS) && (j == (invadersLeftColumn + 1)))
-                            invadersLeftColumn++;
-                        else
-                            count[j] = count[j] + 1;
-                    }
-                }
-
-                if(shiftAliens)
-                {
-                    break;
-                }
-            }
-        }
     }
 
     redrawAliens = false;
@@ -322,7 +213,7 @@ void GameManager::addBullet(bool player, int posX, int posY)
 void GameManager::updateBullets()
 {
     bool deleteBullet = false;
-    for(int h = 0; h < 5; h++)
+    for(int h = 0; h < 1; h++)
     {
         if(bullets[h] != NULL)
         {
@@ -365,15 +256,21 @@ void GameManager::updateBullets()
                 int grid_j = (bullets[h]->GetPosX() - 30) / 40;
                 int grid_i = (bullets[h]->GetPosY() - 80) / 40;
 
+                qDebug() << "grid_i" << grid_i << "grid_j" << grid_j;
+                qDebug() << "invaderTopRow" << invadersTopRow << "invadersLeftColumn" << invadersLeftColumn;
+
                 // Find invader coord to determine type:
                 int invader_i = grid_i - invadersTopRow;
                 int invader_j = grid_j - invadersLeftColumn;
+
+                qDebug() << "invader_i" << invader_i << "invader_j" << invader_j;
 
                 if(grid[invader_i][invader_j] == 1)
                 {
                     // Find bullet position relative to the grid cell:
                     int bulletRelPosX = grid_i % 40;
                     int bulletRelPosY = grid_j % 40;
+                    qDebug() << "bulletRelPosX" << bulletRelPosX << "bulletRelPosY" << bulletRelPosY;
 
                     if(bulletRelPosX >= 2 && bulletRelPosX <= 38)
                     {
@@ -382,6 +279,7 @@ void GameManager::updateBullets()
                             //Calculate bullet position relative to alien
                             bulletRelPosX = (bulletRelPosX - 2) / 3;
                             bulletRelPosY = (bulletRelPosY - 10) / 3;
+                            qDebug() << "       bulletRelPosX" << bulletRelPosX << "bulletRelPosY" << bulletRelPosY;
                             if(alienVec.at(invader_i + invader_j)->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]))
                             {
                                 grid[grid_i][grid_j] = 0;
@@ -420,7 +318,128 @@ void GameManager::updateBullets()
 
 void GameManager::updateAliens()
 {
+    bool skipCount = false;
     redrawAliens = true;
+    if(redrawAliens && shiftAliens)
+    {
+        shiftAliens = false;
+    }
+
+    if(redrawAliens)
+    {
+        if(left)
+        {
+            if(!shiftAliens && !skipCount)
+            {
+                invadersLeftColumn--;
+                skipCount = true;
+            }
+
+            for(int i = 0; i < ROWS; i++)
+            {
+                for(int j = 0; j < COLUMNS; j++)
+                {
+                    if(grid[i][j] == 1)
+                    {
+                        if(j == 0)
+                        {
+                            left = false;
+                            shiftAliens = true;
+                            break;
+                        }
+                        else
+                        {
+                            grid[i][j - 1] = grid[i][j];
+                            grid[i][j] = 0;
+                        }
+                    }
+                }
+
+                if(shiftAliens)
+                {
+                    break;
+                }
+            }
+
+        }
+        else
+        {
+            if(!shiftAliens && !skipCount)
+            {
+                invadersLeftColumn++;
+                skipCount = true;
+            }
+
+            for(int i = ROWS - 1; i >= 0; i--)
+            {
+                for(int j = COLUMNS - 1; j >= 0; j--)
+                {
+                    if(grid[i][j] == 1)
+                    {
+                        if(j == (COLUMNS - 1))
+                        {
+                            left = true;
+                            shiftAliens = true;
+                            break;
+                        }
+                        else
+                        {
+                            if(j + 1 < COLUMNS)
+                            {
+                                grid[i][j + 1] = grid[i][j];
+                                grid[i][j] = 0;
+                            }
+                        }
+
+                    }
+                }
+
+                if(shiftAliens)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    if(shiftAliens)
+    {
+        for(int i = ROWS - 1; i >= 0; i--)
+        {
+            for(int j = COLUMNS - 1; j >= 0; j--)
+            {
+                if(grid[i][j] == 1)
+                {
+                    if((i + 1) >= ROWS)
+                    {
+                        // Game Over
+                    }
+                    else
+                    {
+                        grid[i + 1][j] = grid[i][j];
+                        grid[i][j] = 0;
+                    }
+                }
+            }
+        }
+
+qDebug() << "Called top row inc";
+        invadersTopRow++;
+    }
+
+}
+
+void GameManager::alienFireSelect()
+{
+    int grid_i = rand() % 40;
+    int grid_j = rand() % 40;
+    if(grid[grid_i][grid_j] == 1)
+    {
+        int invader_i = grid_i - invadersTopRow;
+        int invader_j = grid_j - invadersLeftColumn;
+        alienVec.at(invader_i + invader_j)->Fire();
+        alienFireTracker[bulletIndex] = (invader_i + invader_j);
+    }
 }
 
 /// alienFire Logic
