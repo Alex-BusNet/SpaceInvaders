@@ -41,7 +41,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     gameUpdateTimer->start();
     bulletUpdateTimer->start();
     alienBulletTimer->start();
-//    ufoSpawnTimer->start();
+    ufoSpawnTimer->start();
 }
 
 GameManager::~GameManager()
@@ -501,7 +501,7 @@ void GameManager::updateBullets()
 
                     if(UFO != NULL)
                     {
-                        if((bullets[h]->GetPosY() >= 70) && (bullets[h]->GetPosY() <= 30))
+                        if((bullets[h]->GetPosY() <= 70) && (bullets[h]->GetPosY() >= 30))
                         {
                             if(UFO->CheckCollision(bullets[h]->GetPosX(), bullets[h]->GetPosY()))
                             {
@@ -576,9 +576,9 @@ void GameManager::updateAliens()
         {
             if(left)
             {
-                for(int i = 0; i < ROWS; i++)
+                for(int j = 0; j < COLUMNS; j++)
                 {
-                    for(int j = 0; j < COLUMNS; j++)
+                    for(int i = 0; i < ROWS; i++)
                     {
                         if(grid[i][j] == 1)
                         {
@@ -613,9 +613,9 @@ void GameManager::updateAliens()
             }
             else
             {
-                for(int i = 0; i < ROWS; i++)
+                for(int j = COLUMNS - 1; j >= 0; j--)
                 {
-                    for(int j = COLUMNS - 1; j >= 0; j--)
+                    for(int i = 0; i < ROWS; i++)
                     {
                         if(grid[i][j] == 1)
                         {
@@ -699,20 +699,20 @@ void GameManager::spawnUFO()
     if(!gameOver && !levelEnd)
     {
         if((UFO != NULL) && (UFO->isMarked()))
-            delete UFO;
+            UFO = NULL;
 
         static int spawnCount = 0;
 
-        if(spawnCount == 10)
+        if(spawnCount == 100)
         {
             spawnCount = 0;
             int spawn = rand() % 100;
 
-            if((spawn < 20) && (UFO == NULL))
+            if((spawn < 10) && (UFO == NULL))
             {
                 UFO = new ufo(2, 32, true);
             }
-            else if((spawn > 80) && (UFO == NULL))
+            else if((spawn > 90) && (UFO == NULL))
             {
                 UFO = new ufo(896, 32, false);
             }

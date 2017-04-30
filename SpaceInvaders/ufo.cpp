@@ -46,6 +46,7 @@ void ufo::drawUFO(QPainter *paint, bool updateFrame)
 
 bool ufo::CheckCollision(int bulletX, int bulletY)
 {
+    qDebug() << "UFO Collision Check";
     if((bulletX >= posX )&& (bulletX <= (posX + 48)))
     {
         if((bulletY >= posY) && (bulletY <= (posY + 53)))
