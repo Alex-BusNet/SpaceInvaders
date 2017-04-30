@@ -14,7 +14,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
 {
     this->setFixedSize(930, 750);
 
-    SetupGame();
+    SetupGame(true);
     srand(time(0));
 
     alienAnimationTimer = new QTimer(this);
@@ -33,10 +33,15 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     alienBulletTimer->setInterval(500);
     connect(alienBulletTimer, SIGNAL(timeout()), this, SLOT(alienFireSelect()));
 
+    ufoSpawnTimer = new QTimer(this);
+    ufoSpawnTimer->setInterval(100);
+    connect(ufoSpawnTimer, SIGNAL(timeout()), this, SLOT(spawnUFO()));
+
     alienAnimationTimer->start();
     gameUpdateTimer->start();
     bulletUpdateTimer->start();
     alienBulletTimer->start();
+    ufoSpawnTimer->start();
 }
 
 GameManager::~GameManager()
@@ -70,18 +75,6 @@ GameManager::~GameManager()
             grid[i][j] = 0;
         }
     }
-    if(alienAnimationTimer != NULL)
-        delete alienAnimationTimer;
-
-    if(bulletUpdateTimer != NULL)
-        delete bulletUpdateTimer;
-
-    if(alienBulletTimer != NULL)
-        delete alienBulletTimer;
-
-    if(gameUpdateTimer != NULL)
-        delete gameUpdateTimer;
-
 }
 
 void GameManager::paintEvent(QPaintEvent *e)
@@ -91,72 +84,86 @@ void GameManager::paintEvent(QPaintEvent *e)
     paint.setBrush(QBrush(Qt::black));
     paint.drawRect(this->rect());
 
-    if(!gameOver)
+    if(!gameOver && !levelEnd)
     {
         paint.setPen(Qt::white);
 
         //=================
-        // Grid Rendering;
+        // Grid Rendering
         //=================
 
-//        int posX = 15, posY = 70;
-//        paint.drawLine(posX, 30, GRID_END, 30);
-//        for(int i = 0; i < ROWS; i++)
-//        {
-//            paint.drawLine(posX, posY, GRID_END, posY);
-//            for(int j = 0; j < COLUMNS; j++)
-//            {
-                // Grid Coords
-    //            paint.drawText(posX + 3, posY + 15, QString("%1,%2").arg(i).arg(j));
-    //            paint.drawText(posX + 1, posY + 25, QString("%1").arg(j));
-    //            paint.drawText(posX + 15, posY + 35, QString("%1").arg(grid[i][j]));
+        int posX = 15, posY = 70;
+        for(int i = 0; i < ROWS; i++)
+        {
+            for(int j = 0; j < COLUMNS; j++)
+            {
+                if(!levelEnd)
+                {
+                    if(i >= invadersTopRow && i < invadersTopRow + 5)
+                    {
+                        if(j >= invadersLeftColumn && j < invadersRightColumn)
+                            paint.drawText(posX + 5, posY + 15, QString("%1").arg(grid[i][j]));
+                    }
+                }
 
-                // Main Grid
-//                paint.drawLine(posX, posY, posX, posY + Y_OFFSET);
-//                posX += X_OFFSET;
-//            }
+                posX += X_OFFSET;
+            }
 
-//            posX = 15;
-//            posY += Y_OFFSET;
-//        }
-
-        // These two lines make the grid look more complete
-//        paint.drawLine(GRID_END, 30, GRID_END, posY);
-    //    paint.drawLine(posX, 590, GRID_END, 590);
-//        paint.drawLine(posX, 670, GRID_END, 670);
-
-        // Bunker Location Grid
-//        paint.drawLine(30, 590, 30, 720);
-//        paint.drawLine(240, 590, 240, 720);
-//        paint.drawLine(450, 590, 450, 720);
-//        paint.drawLine(650, 590, 650, 720);
-//        paint.drawLine(870, 590, 870, 720);
+            posX = 15;
+            posY += Y_OFFSET;
+        }
+        paint.setPen(QPen(Qt::green));
+        paint.drawText(15, 35, QString("Left column: %1    Right column: %2    Top row: %3    Kill count: %4").arg(invadersLeftColumn).arg(invadersRightColumn).arg(invadersTopRow).arg(killCount));
+        paint.drawLine((invadersLeftColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersLeftColumn * 30) + 15, ((invadersTopRow + 5) * 40) + 70);
+        paint.drawLine((invadersRightColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersRightColumn * 30) + 15, ((invadersTopRow + 5) * 40) + 70);
+        paint.drawLine((invadersLeftColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersRightColumn * 30) + 15, (invadersTopRow * 40) + 70);
+        paint.setPen(QPen(Qt::white));
 
         //======================
         // Projectile Rendering
         //======================
 
-        for(int i = 0; i < 5; i++)
+        if(!levelEnd)
         {
-            if(bullets[i] != NULL)
-                bullets[i]->drawBullet(&paint);
+            for(int i = 0; i < 5; i++)
+            {
+                if(bullets[i] != NULL)
+                    bullets[i]->drawBullet(&paint);
+            }
         }
 
         //=================
         // Enemy Rendering
         //=================
 
-        paint.setBrush(QBrush(Qt::white));
-
-        foreach(Alien *a, alienVec)
+        if(!levelEnd)
         {
-            if(a != NULL)
-                a->drawAlien(&paint, redrawAliens, shiftAliens);
-        }
+            paint.setBrush(QBrush(Qt::white));
 
-        if(redrawAliens && shiftAliens)
-        {
-            shiftAliens = false;
+            foreach(Alien *a, alienVec)
+            {
+                if(a != NULL)
+                    a->drawAlien(&paint, redrawAliens, shiftAliens);
+            }
+
+            if(redrawAliens && shiftAliens)
+            {
+                shiftAliens = false;
+            }
+
+            if(UFO != NULL)
+            {
+                if(!UFO->isMarked())
+                    UFO->drawUFO(&paint, updateUFO);
+
+                if(UFO->GetPosX() < 30 && !UFO->StartedOnLeft())
+                    UFO->MarkForDelete();
+                else if(UFO->GetPosX() > 900 && UFO->StartedOnLeft())
+                    UFO->MarkForDelete();
+
+                if(updateUFO)
+                    updateUFO = false;
+            }
         }
 
         redrawAliens = false;
@@ -165,27 +172,30 @@ void GameManager::paintEvent(QPaintEvent *e)
         // Bunker Rendering
         //==================
 
-        paint.setBrush(QBrush(Qt::green));
-        paint.setPen(QPen(Qt::green));
-        int startX = 91, bunkerX = 91, bunkerY = 590;
-        for(int k = 0; k < 4; k++)
+        if(!levelEnd)
         {
-            for(int i = 0; i < 30; i++)
+            paint.setBrush(QBrush(Qt::green));
+            paint.setPen(QPen(Qt::green));
+            int startX = 91, bunkerX = 91, bunkerY = 590;
+            for(int k = 0; k < 4; k++)
             {
-                for(int j = 0; j < 44; j++)
+                for(int i = 0; i < 30; i++)
                 {
-                    if(bunker[k][i][j] == 1)
-                        paint.drawRect(QRect(bunkerX, bunkerY, 1, 1));
+                    for(int j = 0; j < 44; j++)
+                    {
+                        if(bunker[k][i][j] == 1)
+                            paint.drawRect(QRect(bunkerX, bunkerY, 1, 1));
 
-                    bunkerX += 2;
+                        bunkerX += 2;
+                    }
+
+                    bunkerY +=2;
+                    bunkerX = startX;
                 }
 
-                bunkerY +=2;
-                bunkerX = startX;
+                bunkerY = 590;
+                startX = 91 + (210 * (k + 1));
             }
-
-            bunkerY = 590;
-            startX = 91 + (210 * (k + 1));
         }
 
         //==================
@@ -209,23 +219,41 @@ void GameManager::paintEvent(QPaintEvent *e)
         paint.drawText(380, 20, "<<ADD HIGH SCORE>>");
         /// Add high score tracker
     }
+    else if(gameOver && !levelEnd)
+    {
+        paint.setPen(QPen(Qt::green));
+        QFont font("Courier", 36, 1);
+        paint.setFont(font);
+        paint.drawText((this->width() / 2) - 130, this->height() / 2, QString("GAME OVER"));
+        QFont font2("Courier", 25, 1);
+        paint.setFont(font2);
+        paint.drawText((this->width() / 2) - 310, this->height() / 2 + 50, QString("New Game? Press [Space] or [Enter]"));
+    }
     else
     {
         paint.setPen(QPen(Qt::green));
         QFont font("Courier", 36, 1);
         paint.setFont(font);
-        paint.drawText((this->width() / 2) - 125, this->height() / 2, QString("GAME OVER"));
+        paint.drawText((this->width() / 2) - 150, this->height() / 2, QString("LEVEL CLEAR!"));
         QFont font2("Courier", 25, 1);
         paint.setFont(font2);
-        paint.drawText((this->width() / 2) - 300, this->height() / 2 + 50, QString("New Game? Press [Space] or [Enter]"));
+        paint.drawText((this->width() / 2) - 350, this->height() / 2 + 50, QString("Press [Space] or [Enter] to Continue"));
+
+        if(player != NULL)
+        {
+            player->drawPlayer(&paint);
+        }
     }
 }
 
 void GameManager::keyPressEvent(QKeyEvent *event)
 {
-    if((event->key() == Qt::Key_Space || event->key() == Qt::Key_Return) && gameOver)
+    if((event->key() == Qt::Key_Space || event->key() == Qt::Key_Return) && (gameOver || levelEnd))
     {
-        SetupGame();
+        if(gameOver)
+            SetupGame(true);
+        else if(levelEnd)
+            SetupGame(false);
     }
     else if(event->key() == Qt::Key_Escape)
     {
@@ -267,6 +295,8 @@ void GameManager::addBullet(bool player, int posX, int posY)
 
 void GameManager::GameOver()
 {
+    gameOver = true;
+
     if(player != NULL)
         delete player;
 
@@ -308,21 +338,75 @@ void GameManager::GameOver()
         }
     }
 
-    gameOver = true;
+    if(UFO != NULL)
+        delete UFO;
+
 }
 
-void GameManager::SetupGame()
+void GameManager::Victory()
+{
+    levelEnd = true;
+
+    for(int i = 0; i < 5; i++)
+    {
+        if(bullets[i] != NULL)
+        {
+            delete bullets[i];
+            bullets[i] = NULL;
+        }
+    }
+
+    foreach(Alien *a, alienVec)
+    {
+        if(a != NULL)
+        {
+            delete a;
+        }
+    }
+
+    alienVec.clear();
+
+    for(int i = 0; i < 15; i++)
+    {
+        for(int j = 0; j < 30; j++)
+        {
+            grid[i][j] = 0;
+        }
+    }
+
+    for(int k = 0; k < 4; k++)
+    {
+        for(int i = 0; i < 30; i++)
+        {
+            for(int j = 0; j < 44; j++)
+            {
+                bunker[k][i][j] = bunkerRef[k][i][j];
+            }
+        }
+    }
+
+    if(UFO != NULL)
+        delete UFO;
+}
+
+void GameManager::SetupGame(bool newGame)
 {
     redrawAliens = true;
     redrawBunkers = true;
     shiftAliens = false;
     left = false;
     pauseGame = false;
+    updateUFO = false;
     invadersTopRow = 0;
     invadersLeftColumn = 0;
-
+    invadersRightColumn = 11;
+    killCount = 0;
     player = new Player(422, 680);
-    playerScore = 0;
+
+    if(newGame)
+        playerScore = 0;
+
+    UFO = NULL;
 
     // Initialize the Aliens
     int alienX = 18, alienY = 80;
@@ -339,12 +423,13 @@ void GameManager::SetupGame()
         alienY += Y_OFFSET;
     }
 
+    levelEnd = false;
     gameOver = false;
 }
 
 void GameManager::updateBullets()
 {
-    if(!gameOver)
+    if(!gameOver && !levelEnd)
     {
         bool deleteBullet = false;
         for(int h = 0; h < 5; h++)
@@ -386,30 +471,42 @@ void GameManager::updateBullets()
                 //=================
                 if(h == 0)
                 {
-                    int grid_j = (bullets[h]->GetPosX() - 30) / X_OFFSET;
-                    int grid_i = (bullets[h]->GetPosY() - 80) / Y_OFFSET;
+                    int grid_j = (bullets[h]->GetPosX() - 15) / X_OFFSET;
+                    int grid_i = (bullets[h]->GetPosY() - 70) / Y_OFFSET;
 
                     // Find invader coord to determine type:
-                    int invader_i = grid_i - invadersTopRow;
-                    int invader_j = grid_j - invadersLeftColumn;
+                    int invader_i = grid_i - abs(invadersTopRow);
+                    int invader_j = grid_j - abs(invadersLeftColumn);
 
                     if((invader_i < 5) && (invader_j < 11) && (invader_i >= 0) && (invader_j >= 0))
                     {
                         if(grid[grid_i][grid_j] == 1)
                         {
-                            // Find bullet position relative to the grid cell:
                             int bulletRelPosX = bullets[h]->GetPosX() % 12;
                             int bulletRelPosY = bullets[h]->GetPosY() % 12;
                             int index = (invader_i * 11) + invader_j;
                             if(index >= 0 && alienVec.at(index) != NULL)
                             {
-                                if(alienVec.at(index)->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]))
+                                if(alienVec.at(index)->CheckCollision(bulletRelPosX, bulletRelPosY, invader[invader_i][invader_j]))
                                 {
                                     grid[grid_i][grid_j] = 0;
-                                    alienVec.replace(index, NULL);
+                                    alienVec.at(index)->kill();
+                                    killCount++;
                                     deleteBullet = true;
                                     playerScore += (invaders[invader_i][invader_j] + 2) * 10;
                                 }
+                            }
+                        }
+                    }
+
+                    if(UFO != NULL)
+                    {
+                        if((bullets[h]->GetPosY() >= 70) && (bullets[h]->GetPosY() <= 30))
+                        {
+                            if(UFO->CheckCollision(bullets[h]->GetPosX(), bullets[h]->GetPosY()))
+                            {
+                                UFO->MarkForDelete();
+                                playerScore += 200;
                             }
                         }
                     }
@@ -452,6 +549,12 @@ void GameManager::updateBullets()
                         alienFireTracker[h] = -1;
                     }
                 }
+
+                if(killCount == 55)
+                {
+                    Victory();
+                    return;
+                }
             }
         }
     }
@@ -459,7 +562,7 @@ void GameManager::updateBullets()
 
 void GameManager::updateAliens()
 {
-    if(!gameOver)
+    if(!gameOver && !levelEnd)
     {
         bool skipCount = false;
         redrawAliens = true;
@@ -473,7 +576,6 @@ void GameManager::updateAliens()
         {
             if(left)
             {
-
                 for(int i = 0; i < ROWS; i++)
                 {
                     for(int j = 0; j < COLUMNS; j++)
@@ -504,14 +606,14 @@ void GameManager::updateAliens()
                 if(!shiftAliens && !skipCount)
                 {
                     invadersLeftColumn--;
+                    invadersRightColumn--;
                     skipCount = true;
                 }
 
             }
             else
             {
-
-                for(int i = ROWS - 1; i >= 0; i--)
+                for(int i = 0; i < ROWS; i++)
                 {
                     for(int j = COLUMNS - 1; j >= 0; j--)
                     {
@@ -535,7 +637,6 @@ void GameManager::updateAliens()
                         }
                     }
 
-
                     if(shiftAliens)
                     {
                         break;
@@ -545,6 +646,7 @@ void GameManager::updateAliens()
                 if(!shiftAliens && !skipCount)
                 {
                     invadersLeftColumn++;
+                    invadersRightColumn++;
                     skipCount = true;
                 }
             }
@@ -580,7 +682,7 @@ void GameManager::updateAliens()
 
 void GameManager::alienFireSelect()
 {
-    if(!gameOver)
+    if(!gameOver && !levelEnd)
     {
         int invader_i = rand() % 5;
         int invader_j = rand() % 11;
@@ -588,6 +690,40 @@ void GameManager::alienFireSelect()
         {
             alienVec.at((invader_i * 11) + invader_j)->Fire();
             alienFireTracker[bulletIndex] = ((invader_i * 11) + invader_j);
+        }
+    }
+}
+
+void GameManager::spawnUFO()
+{
+    if(!gameOver && !levelEnd)
+    {
+        if((UFO != NULL) && (UFO->isMarked()))
+            delete UFO;
+
+        static int spawnCount = 0;
+
+        if(spawnCount == 10)
+        {
+            spawnCount = 0;
+            int spawn = rand() % 100;
+
+            if((spawn < 20) && (UFO == NULL))
+            {
+                UFO = new ufo(2, 32, true);
+            }
+            else if((spawn > 80) && (UFO == NULL))
+            {
+                UFO = new ufo(896, 32, false);
+            }
+        }
+        else if(UFO != NULL)
+        {
+            updateUFO = true;
+        }
+        else
+        {
+           spawnCount++;
         }
     }
 }

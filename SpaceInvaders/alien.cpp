@@ -10,25 +10,29 @@ Alien::Alien(int type, int posX, int posY)
     this->frame = 1;
     direction = 1; // 0 = Left, 1 = Right
     this->canFire = true;
+    alive = true;
 }
 
 void Alien::drawAlien(QPainter *paint, bool updateFrame, bool shiftDown)
 {
-    int rX = posX, rY = posY;
-    for(int i = 0; i < 8; i++)
+    if(alive)
     {
-        for(int j = 0; j < 12; j++)
+        int rX = posX, rY = posY;
+        for(int i = 0; i < 8; i++)
         {
-            if(alienRenders[type][frame][i][j] == 1)
+            for(int j = 0; j < 12; j++)
             {
-                paint->drawRect(QRect(rX, rY, SIZE - 1, SIZE));
+                if(alienRenders[type][frame][i][j] == 1)
+                {
+                    paint->drawRect(QRect(rX, rY, SIZE - 1, SIZE));
+                }
+
+                rX += SIZE - 1;
             }
 
-            rX += SIZE - 1;
+            rX = posX;
+            rY += SIZE;
         }
-
-        rX = posX;
-        rY += SIZE;
     }
 
     if(updateFrame)
@@ -87,15 +91,18 @@ void Alien::shiftDown()
 
 bool Alien::CheckCollision(int bulletX, int bulletY, int type)
 {
-    if(alienRenders[type][frame][bulletY][bulletX] == 1)
-        return true;
-    else
-        return false;
+    if(alive)
+    {
+        if(alienRenders[type][frame][bulletY][bulletX] == 1)
+            return true;
+    }
+
+    return false;
 }
 
 void Alien::Fire()
 {
-    if(canFire)
+    if(canFire && alive)
     {
         canFire = false;
         GameManager::addBullet(false, posX + 15, posY + 18);
@@ -105,4 +112,14 @@ void Alien::Fire()
 void Alien::ResetFire()
 {
     canFire = true;
+}
+
+bool Alien::isAlive()
+{
+    return alive;
+}
+
+void Alien::kill()
+{
+    alive = false;
 }

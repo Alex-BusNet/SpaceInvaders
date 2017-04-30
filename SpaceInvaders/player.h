@@ -20,7 +20,6 @@ public:
 
 private:
     void Fire();
-    QPolygon laser;
     int posX, posY;
     int lives;
     int direction, lastDirection; // -1 = no movement, 0 = left, 1 = right

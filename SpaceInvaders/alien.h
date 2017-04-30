@@ -14,10 +14,12 @@ public:
     bool CheckCollision(int bulletX, int bulletY, int type);
     void Fire();
     void ResetFire();
+    bool isAlive();
+    void kill();
 
 private:
     int type, posX, posY, frame, direction;
-    bool canFire;
+    bool canFire, alive;
     int alienRenders[3][2][8][12] = //[type][frame][i][j]
     {
         // type 0, animation 0

@@ -10,6 +10,7 @@ public:
     void drawBullet(QPainter* paint);
     int GetPosX();
     int GetPosY();
+
 public slots:
     void UpdatePos();
 

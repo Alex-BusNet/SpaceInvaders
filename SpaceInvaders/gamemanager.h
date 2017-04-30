@@ -4,6 +4,7 @@
 #include "alien.h"
 #include "player.h"
 #include "bullet.h"
+#include "ufo.h"
 
 #include <QPaintEvent>
 #include <QPushButton>
@@ -25,13 +26,14 @@ public:
 private:
     bool redrawAliens;
     bool redrawBunkers;
+    bool updateUFO;
     bool shiftAliens;
     bool left;
-    bool gameOver;
+    bool gameOver, levelEnd;
     bool pauseGame;
 
-    int invadersTopRow, invadersLeftColumn;
-    int playerScore;
+    int invadersTopRow, invadersLeftColumn, invadersRightColumn;
+    int playerScore, killCount;
 
     int invaders[5][11] =
     {
@@ -353,7 +355,7 @@ private:
 
     };
     Player* player;
-
+    ufo *UFO;
     QVector<Alien*> alienVec;
     int alienFireTracker[4] = { -1, -1, -1, -1 };
 
@@ -361,9 +363,11 @@ private:
     QTimer *gameUpdateTimer;
     QTimer *bulletUpdateTimer;
     QTimer *alienBulletTimer;
+    QTimer *ufoSpawnTimer;
 
     void GameOver();
-    void SetupGame();
+    void Victory();
+    void SetupGame(bool newGame);
 signals:
 
 public slots:
@@ -372,6 +376,7 @@ private slots:
     void updateBullets();
     void updateAliens();
     void alienFireSelect();
+    void spawnUFO();
 };
 
 static Bullet* bullets[5];
