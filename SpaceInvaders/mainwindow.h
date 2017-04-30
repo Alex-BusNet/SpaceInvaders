@@ -20,6 +20,12 @@ public:
 private slots:
     void on_newGamePB_clicked();
 
+    void on_CloseGamePB_clicked();
+
+    void on_ShowControlsPB_clicked();
+
+    void on_ControlClosePB_clicked();
+
 private:
     Ui::MainWindow *ui;
     GameManager *gm;

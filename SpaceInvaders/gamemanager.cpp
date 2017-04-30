@@ -1,40 +1,21 @@
 #include "gamemanager.h"
 #include <QDebug>
 #include <QPainter>
+#include <random>
+#include <ctime>
 #define ROWS 15
 #define COLUMNS 30
-#define X_OFFSET 40
+#define X_OFFSET 30
 #define Y_OFFSET 40
-#define SHIFT_AMOUNT 20
-#define GRID_END ((X_OFFSET * 11) + (SHIFT_AMOUNT * (COLUMNS - 9)) + 10)
+#define SHIFT_AMOUNT 30
+#define GRID_END ((X_OFFSET * 11) + (SHIFT_AMOUNT * (COLUMNS - 11)) + 15)
 
 GameManager::GameManager(QWidget *parent) : QWidget(parent)
 {
-    this->setFixedSize(900, 750);
+    this->setFixedSize(930, 750);
 
-    redrawAliens = true;
-    redrawBunkers = true;
-    shiftAliens = false;
-    left = false;
-    pauseGame = false;
-    invadersTopRow = 0;
-    invadersLeftColumn = 0;
-    player = new Player(422, 680);
-
-    // Initialize the Aliens
-    int alienX = 32, alienY = 80;
-    for(int i = 0; i < 5; i++)
-    {
-        for(int j = 0; j < 11; j++)
-        {
-            alienVec.push_back(new Alien(invaders[i][j], alienX, alienY));
-            grid[i][j] = 1;
-            alienX += X_OFFSET;
-        }
-
-        alienX = 32;
-        alienY += Y_OFFSET;
-    }
+    SetupGame();
+    srand(time(0));
 
     alienAnimationTimer = new QTimer(this);
     alienAnimationTimer->setInterval(500);
@@ -49,138 +30,212 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     connect(bulletUpdateTimer, SIGNAL(timeout()), this, SLOT(updateBullets()));
 
     alienBulletTimer = new QTimer(this);
-    alienBulletTimer->setInterval(15);
+    alienBulletTimer->setInterval(500);
     connect(alienBulletTimer, SIGNAL(timeout()), this, SLOT(alienFireSelect()));
 
     alienAnimationTimer->start();
     gameUpdateTimer->start();
     bulletUpdateTimer->start();
-    qDebug() << "Bunker grid cell size:" << ((this->width() / 2) - (this->width() / 4));
+    alienBulletTimer->start();
+}
+
+GameManager::~GameManager()
+{
+    if(player != NULL)
+        delete player;
+
+    for(int i = 0; i < 5; i++)
+    {
+        if(bullets[i] != NULL)
+        {
+            delete bullets[i];
+            bullets[i] = NULL;
+        }
+    }
+
+    foreach(Alien *a, alienVec)
+    {
+        if(a != NULL)
+        {
+            delete a;
+        }
+    }
+
+    alienVec.clear();
+
+    for(int i = 0; i < 15; i++)
+    {
+        for(int j = 0; j < 30; j++)
+        {
+            grid[i][j] = 0;
+        }
+    }
+    if(alienAnimationTimer != NULL)
+        delete alienAnimationTimer;
+
+    if(bulletUpdateTimer != NULL)
+        delete bulletUpdateTimer;
+
+    if(alienBulletTimer != NULL)
+        delete alienBulletTimer;
+
+    if(gameUpdateTimer != NULL)
+        delete gameUpdateTimer;
+
 }
 
 void GameManager::paintEvent(QPaintEvent *e)
 {
     QPainter paint(this);
 
-    paint.setPen(Qt::white);
     paint.setBrush(QBrush(Qt::black));
     paint.drawRect(this->rect());
 
-    //=================
-    // Grid Rendering;
-    //=================
-
-    int posX = 30, posY = 70;
-    paint.drawLine(posX, 30, GRID_END, 30);
-    for(int i = 0; i < ROWS; i++)
+    if(!gameOver)
     {
-        paint.drawLine(posX, posY, GRID_END, posY);
-        for(int j = 0; j < COLUMNS; j++)
-        {
-            // Grid Coords
-//            paint.drawText(posX + 1, posY + 15, QString("%1").arg(i));
-//            paint.drawText(posX + 1, posY + 25, QString("%1").arg(j));
-//            paint.drawText(posX + 15, posY + 35, QString("%1").arg(grid[i][j]));
+        paint.setPen(Qt::white);
 
-            // Main Grid
-            paint.drawLine(posX, posY, posX, posY + Y_OFFSET);
-            posX += X_OFFSET;
+        //=================
+        // Grid Rendering;
+        //=================
+
+//        int posX = 15, posY = 70;
+//        paint.drawLine(posX, 30, GRID_END, 30);
+//        for(int i = 0; i < ROWS; i++)
+//        {
+//            paint.drawLine(posX, posY, GRID_END, posY);
+//            for(int j = 0; j < COLUMNS; j++)
+//            {
+                // Grid Coords
+    //            paint.drawText(posX + 3, posY + 15, QString("%1,%2").arg(i).arg(j));
+    //            paint.drawText(posX + 1, posY + 25, QString("%1").arg(j));
+    //            paint.drawText(posX + 15, posY + 35, QString("%1").arg(grid[i][j]));
+
+                // Main Grid
+//                paint.drawLine(posX, posY, posX, posY + Y_OFFSET);
+//                posX += X_OFFSET;
+//            }
+
+//            posX = 15;
+//            posY += Y_OFFSET;
+//        }
+
+        // These two lines make the grid look more complete
+//        paint.drawLine(GRID_END, 30, GRID_END, posY);
+    //    paint.drawLine(posX, 590, GRID_END, 590);
+//        paint.drawLine(posX, 670, GRID_END, 670);
+
+        // Bunker Location Grid
+//        paint.drawLine(30, 590, 30, 720);
+//        paint.drawLine(240, 590, 240, 720);
+//        paint.drawLine(450, 590, 450, 720);
+//        paint.drawLine(650, 590, 650, 720);
+//        paint.drawLine(870, 590, 870, 720);
+
+        //======================
+        // Projectile Rendering
+        //======================
+
+        for(int i = 0; i < 5; i++)
+        {
+            if(bullets[i] != NULL)
+                bullets[i]->drawBullet(&paint);
         }
 
-        posX = 30;
-        posY += Y_OFFSET;
-    }
+        //=================
+        // Enemy Rendering
+        //=================
 
-    // These two lines make the grid look more complete
-    paint.drawLine(GRID_END, 30, GRID_END, posY);
-//    paint.drawLine(posX, 590, GRID_END, 590);
-    paint.drawLine(posX, 670, GRID_END, 670);
+        paint.setBrush(QBrush(Qt::white));
 
-    // Bunker Location Grid
-    paint.drawLine(30, 590, 30, 720);
-    paint.drawLine(240, 590, 240, 720);
-    paint.drawLine(450, 590, 450, 720);
-    paint.drawLine(650, 590, 650, 720);
-    paint.drawLine(870, 590, 870, 720);
-
-    //======================
-    // Projectile Rendering
-    //======================
-
-    for(int i = 0; i < 5; i++)
-    {
-        if(bullets[i] != NULL)
-            bullets[i]->drawBullet(&paint);
-    }
-
-    //=================
-    // Enemy Rendering
-    //=================
-
-    paint.setBrush(QBrush(Qt::white));
-
-    foreach(Alien *a, alienVec)
-    {
-        a->drawAlien(&paint, redrawAliens, shiftAliens);
-    }
-
-
-    if(redrawAliens && shiftAliens)
-    {
-        shiftAliens = false;
-    }
-
-    redrawAliens = false;
-
-    //==================
-    // Bunker Rendering
-    //==================
-
-    paint.setBrush(QBrush(Qt::green));
-    paint.setPen(QPen(Qt::green));
-    int startX = 91, bunkerX = 91, bunkerY = 590;
-    for(int k = 0; k < 4; k++)
-    {
-        for(int i = 0; i < 30; i++)
+        foreach(Alien *a, alienVec)
         {
-            for(int j = 0; j < 44; j++)
-            {
-                if(bunker[k][i][j] == 1)
-                    paint.drawRect(QRect(bunkerX, bunkerY, 1, 1));
+            if(a != NULL)
+                a->drawAlien(&paint, redrawAliens, shiftAliens);
+        }
 
-                bunkerX += 2;
+        if(redrawAliens && shiftAliens)
+        {
+            shiftAliens = false;
+        }
+
+        redrawAliens = false;
+
+        //==================
+        // Bunker Rendering
+        //==================
+
+        paint.setBrush(QBrush(Qt::green));
+        paint.setPen(QPen(Qt::green));
+        int startX = 91, bunkerX = 91, bunkerY = 590;
+        for(int k = 0; k < 4; k++)
+        {
+            for(int i = 0; i < 30; i++)
+            {
+                for(int j = 0; j < 44; j++)
+                {
+                    if(bunker[k][i][j] == 1)
+                        paint.drawRect(QRect(bunkerX, bunkerY, 1, 1));
+
+                    bunkerX += 2;
+                }
+
+                bunkerY +=2;
+                bunkerX = startX;
             }
 
-            bunkerY +=2;
-            bunkerX = startX;
+            bunkerY = 590;
+            startX = 91 + (210 * (k + 1));
         }
 
-        bunkerY = 590;
-        startX = 91 + (210 * (k + 1));
+        //==================
+        // Player Rendering
+        //==================
+        if(player != NULL)
+        {
+            player->UpdatePosition();
+            player->drawPlayer(&paint);
+        }
+
+        //================
+        // UI Rendering
+        //================
+
+        paint.drawLine(QLine(0, 720, 900, 720));
+        QFont font("TypeWriter", 10, 1);
+        paint.setFont(font);
+        paint.drawText(20, 735, QString("%1").arg(player->GetLivesRemaining()));
+        paint.drawText(20, 20, QString::number(playerScore));
+        paint.drawText(380, 20, "<<ADD HIGH SCORE>>");
+        /// Add high score tracker
     }
-
-    //==================
-    // Player Rendering
-    //==================
-    player->UpdatePosition();
-    player->drawPlayer(&paint);
-
-    //================
-    // UI Rendering
-    //================
-
-    paint.drawLine(QLine(0, 720, 900, 720));
-    QFont font("TypeWriter", 10, 1);
-    paint.setFont(font);
-    paint.drawText(20, 735, QString("%1").arg(player->GetLivesRemaining()));
-    paint.drawText(20, 20, "<<ADD SCORE TRACKER>>");
-    paint.drawText(380, 20, "<<ADD HIGH SCORE>>");
-    /// Add score tracker
+    else
+    {
+        paint.setPen(QPen(Qt::green));
+        QFont font("Courier", 36, 1);
+        paint.setFont(font);
+        paint.drawText((this->width() / 2) - 125, this->height() / 2, QString("GAME OVER"));
+        QFont font2("Courier", 25, 1);
+        paint.setFont(font2);
+        paint.drawText((this->width() / 2) - 300, this->height() / 2 + 50, QString("New Game? Press [Space] or [Enter]"));
+    }
 }
 
 void GameManager::keyPressEvent(QKeyEvent *event)
 {
-    player->InputHandler(event, true);
+    if((event->key() == Qt::Key_Space || event->key() == Qt::Key_Return) && gameOver)
+    {
+        SetupGame();
+    }
+    else if(event->key() == Qt::Key_Escape)
+    {
+        this->close();
+    }
+    else
+    {
+        player->InputHandler(event, true);
+    }
+
     event->accept();
 }
 
@@ -210,106 +265,192 @@ void GameManager::addBullet(bool player, int posX, int posY)
     }
 }
 
+void GameManager::GameOver()
+{
+    if(player != NULL)
+        delete player;
+
+    for(int i = 0; i < 5; i++)
+    {
+        if(bullets[i] != NULL)
+        {
+            delete bullets[i];
+            bullets[i] = NULL;
+        }
+    }
+
+    foreach(Alien *a, alienVec)
+    {
+        if(a != NULL)
+        {
+            delete a;
+        }
+    }
+
+    alienVec.clear();
+
+    for(int i = 0; i < 15; i++)
+    {
+        for(int j = 0; j < 30; j++)
+        {
+            grid[i][j] = 0;
+        }
+    }
+
+    for(int k = 0; k < 4; k++)
+    {
+        for(int i = 0; i < 30; i++)
+        {
+            for(int j = 0; j < 44; j++)
+            {
+                bunker[k][i][j] = bunkerRef[k][i][j];
+            }
+        }
+    }
+
+    gameOver = true;
+}
+
+void GameManager::SetupGame()
+{
+    redrawAliens = true;
+    redrawBunkers = true;
+    shiftAliens = false;
+    left = false;
+    pauseGame = false;
+    invadersTopRow = 0;
+    invadersLeftColumn = 0;
+
+    player = new Player(422, 680);
+    playerScore = 0;
+
+    // Initialize the Aliens
+    int alienX = 18, alienY = 80;
+    for(int i = 0; i < 5; i++)
+    {
+        for(int j = 0; j < 11; j++)
+        {
+            alienVec.push_back(new Alien(invaders[i][j], alienX, alienY));
+            grid[i][j] = 1;
+            alienX += X_OFFSET;
+        }
+
+        alienX = 18;
+        alienY += Y_OFFSET;
+    }
+
+    gameOver = false;
+}
+
 void GameManager::updateBullets()
 {
-    bool deleteBullet = false;
-    for(int h = 0; h < 1; h++)
+    if(!gameOver)
     {
-        if(bullets[h] != NULL)
+        bool deleteBullet = false;
+        for(int h = 0; h < 5; h++)
         {
-            bullets[h]->UpdatePos();
-
-            //=================
-            // Bunker Collision
-            //=================
-            if(bullets[h]->GetPosY() >= 590 && bullets[h]->GetPosY() <= 650)
+            if(bullets[h] != NULL)
             {
-                // Bunker Coordinates calculations
-                int bunker_k = bullets[h]->GetPosX() / 225;
-                int bunker_j = (bullets[h]->GetPosX() - (91 + (210 * bunker_k))) / 2;
-                int bunker_i = ((bullets[h]->GetPosY() - 590) / 2) - 1;
+                bullets[h]->UpdatePos();
 
-                if(bunker_i >= 0 && bunker_i <= 29 && bunker_j >= 0 && bunker_j < 44 && bunker_k >= 0 && bunker_k < 4)
+                //=================
+                // Bunker Collision
+                //=================
+                if(bullets[h]->GetPosY() >= 590 && bullets[h]->GetPosY() <= 650)
                 {
-                    // Check if the location in the bunker is valid
-                    if(bunker[bunker_k][bunker_i][bunker_j] == 1)
+                    // Bunker Coordinates calculations
+                    int bunker_k = bullets[h]->GetPosX() / 225;
+                    int bunker_j = (bullets[h]->GetPosX() - (91 + (210 * bunker_k))) / 2;
+                    int bunker_i = ((bullets[h]->GetPosY() - 590) / 2) - 1;
+
+                    if(bunker_i >= 0 && bunker_i <= 29 && bunker_j >= 0 && bunker_j < 44 && bunker_k >= 0 && bunker_k < 4)
                     {
-                        deleteBullet = true;
-                        int section_i = bunker_i / 5;
-                        int section_j = bunker_j / 4;
-                        for(int i = (section_i * 5); i < ((section_i + 1) * 5); i++)
+                        // Check if the location in the bunker is valid
+                        if(bunker[bunker_k][bunker_i][bunker_j] == 1)
                         {
-                            for(int j = (section_j * 4); j < ((section_j + 1) * 4); j++)
+                            deleteBullet = true;
+                            int section_i = bunker_i / 5;
+                            int section_j = bunker_j / 4;
+                            for(int i = (section_i * 5); i < ((section_i + 1) * 5); i++)
                             {
-                                bunker[bunker_k][i][j] = 0;
+                                for(int j = (section_j * 4); j < ((section_j + 1) * 4); j++)
+                                {
+                                    bunker[bunker_k][i][j] = 0;
+                                }
                             }
                         }
                     }
                 }
-            }
-            else
-            //=================
-            // Alien Collision
-            //=================
-            {
-                qDebug() << "Checking alien collisions";
-                int grid_j = (bullets[h]->GetPosX() - 30) / 40;
-                int grid_i = (bullets[h]->GetPosY() - 80) / 40;
-
-                qDebug() << "grid_i" << grid_i << "grid_j" << grid_j;
-                qDebug() << "invaderTopRow" << invadersTopRow << "invadersLeftColumn" << invadersLeftColumn;
-
-                // Find invader coord to determine type:
-                int invader_i = grid_i - invadersTopRow;
-                int invader_j = grid_j - invadersLeftColumn;
-
-                qDebug() << "invader_i" << invader_i << "invader_j" << invader_j;
-
-                if(grid[invader_i][invader_j] == 1)
-                {
-                    // Find bullet position relative to the grid cell:
-                    int bulletRelPosX = grid_i % 40;
-                    int bulletRelPosY = grid_j % 40;
-                    qDebug() << "bulletRelPosX" << bulletRelPosX << "bulletRelPosY" << bulletRelPosY;
-
-                    if(bulletRelPosX >= 2 && bulletRelPosX <= 38)
-                    {
-                        if(bulletRelPosY >= 10 && bulletRelPosY <= 34)
-                        {
-                            //Calculate bullet position relative to alien
-                            bulletRelPosX = (bulletRelPosX - 2) / 3;
-                            bulletRelPosY = (bulletRelPosY - 10) / 3;
-                            qDebug() << "       bulletRelPosX" << bulletRelPosX << "bulletRelPosY" << bulletRelPosY;
-                            if(alienVec.at(invader_i + invader_j)->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]))
-                            {
-                                grid[grid_i][grid_j] = 0;
-                                deleteBullet = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            /// To determine if the player was hit, use:
-            ///     << WIP >>
-            ///
-            ///
-
-            // Bullet has reached edge of play area
-            if(bullets[h]->GetPosY() <= 30 || deleteBullet)
-            {
-                deleteBullet = false;
-                bullets[h] = NULL;
-
+                //=================
+                // Alien Collision
+                //=================
                 if(h == 0)
                 {
-                    player->ResetLaser();
+                    int grid_j = (bullets[h]->GetPosX() - 30) / X_OFFSET;
+                    int grid_i = (bullets[h]->GetPosY() - 80) / Y_OFFSET;
+
+                    // Find invader coord to determine type:
+                    int invader_i = grid_i - invadersTopRow;
+                    int invader_j = grid_j - invadersLeftColumn;
+
+                    if((invader_i < 5) && (invader_j < 11) && (invader_i >= 0) && (invader_j >= 0))
+                    {
+                        if(grid[grid_i][grid_j] == 1)
+                        {
+                            // Find bullet position relative to the grid cell:
+                            int bulletRelPosX = bullets[h]->GetPosX() % 12;
+                            int bulletRelPosY = bullets[h]->GetPosY() % 12;
+                            int index = (invader_i * 11) + invader_j;
+                            if(index >= 0 && alienVec.at(index) != NULL)
+                            {
+                                if(alienVec.at(index)->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]))
+                                {
+                                    grid[grid_i][grid_j] = 0;
+                                    alienVec.replace(index, NULL);
+                                    deleteBullet = true;
+                                    playerScore += (invaders[invader_i][invader_j] + 2) * 10;
+                                }
+                            }
+                        }
+                    }
                 }
-                else
+
+                //==================
+                // Player Collision
+                //==================
+                if(h != 0)
                 {
-                    qDebug() << "reset alien fire flag";
-                    alienVec.at(alienFireTracker[h]);
-                    alienFireTracker[h] = -1;
+                    if(player->CheckCollision(bullets[h]->GetPosX(), bullets[h]->GetPosY()))
+                    {
+                        if(player->RemoveLife())
+                        {
+                            GameOver();
+                            return;
+                        }
+                        else
+                        {
+                            player->SetPosition(422, 680);
+                        }
+
+                        deleteBullet = true;
+                    }
+                }
+
+                // Bullet has reached edge of play area
+                if(bullets[h]->GetPosY() <= 30 || deleteBullet || bullets[h]->GetPosY() >= 720)
+                {
+                    deleteBullet = false;
+                    bullets[h] = NULL;
+
+                    if(h == 0)
+                    {
+                        player->ResetLaser();
+                    }
+                    else
+                    {
+                        alienVec.at(alienFireTracker[h]);
+                        alienFireTracker[h] = -1;
+                    }
                 }
             }
         }
@@ -318,139 +459,135 @@ void GameManager::updateBullets()
 
 void GameManager::updateAliens()
 {
-    bool skipCount = false;
-    redrawAliens = true;
-    if(redrawAliens && shiftAliens)
+    if(!gameOver)
     {
-        shiftAliens = false;
-    }
+        bool skipCount = false;
+        redrawAliens = true;
 
-    if(redrawAliens)
-    {
-        if(left)
+        if(redrawAliens && shiftAliens)
         {
-            if(!shiftAliens && !skipCount)
-            {
-                invadersLeftColumn--;
-                skipCount = true;
-            }
+            shiftAliens = false;
+        }
 
-            for(int i = 0; i < ROWS; i++)
+        if(redrawAliens)
+        {
+            if(left)
             {
-                for(int j = 0; j < COLUMNS; j++)
+
+                for(int i = 0; i < ROWS; i++)
                 {
-                    if(grid[i][j] == 1)
+                    for(int j = 0; j < COLUMNS; j++)
                     {
-                        if(j == 0)
+                        if(grid[i][j] == 1)
                         {
-                            left = false;
-                            shiftAliens = true;
-                            break;
+                            if(j == 0)
+                            {
+                                left = false;
+                                shiftAliens = true;
+                                break;
+                            }
+                            else
+                            {
+                                grid[i][j - 1] = grid[i][j];
+                                grid[i][j] = 0;
+                            }
                         }
-                        else
-                        {
-                            grid[i][j - 1] = grid[i][j];
-                            grid[i][j] = 0;
-                        }
+
+                    }
+
+                    if(shiftAliens)
+                    {
+                        break;
                     }
                 }
 
-                if(shiftAliens)
+                if(!shiftAliens && !skipCount)
                 {
-                    break;
+                    invadersLeftColumn--;
+                    skipCount = true;
+                }
+
+            }
+            else
+            {
+
+                for(int i = ROWS - 1; i >= 0; i--)
+                {
+                    for(int j = COLUMNS - 1; j >= 0; j--)
+                    {
+                        if(grid[i][j] == 1)
+                        {
+                            if(j == (COLUMNS - 1))
+                            {
+                                left = true;
+                                shiftAliens = true;
+                                break;
+                            }
+                            else
+                            {
+                                if(j + 1 < COLUMNS)
+                                {
+                                    grid[i][j + 1] = grid[i][j];
+                                    grid[i][j] = 0;
+                                }
+                            }
+
+                        }
+                    }
+
+
+                    if(shiftAliens)
+                    {
+                        break;
+                    }
+                }
+
+                if(!shiftAliens && !skipCount)
+                {
+                    invadersLeftColumn++;
+                    skipCount = true;
                 }
             }
-
         }
-        else
-        {
-            if(!shiftAliens && !skipCount)
-            {
-                invadersLeftColumn++;
-                skipCount = true;
-            }
 
+        if(shiftAliens)
+        {
             for(int i = ROWS - 1; i >= 0; i--)
             {
                 for(int j = COLUMNS - 1; j >= 0; j--)
                 {
                     if(grid[i][j] == 1)
                     {
-                        if(j == (COLUMNS - 1))
+                        if((i + 1) >= ROWS)
                         {
-                            left = true;
-                            shiftAliens = true;
-                            break;
+                            GameOver();
+                            return;
                         }
                         else
                         {
-                            if(j + 1 < COLUMNS)
-                            {
-                                grid[i][j + 1] = grid[i][j];
-                                grid[i][j] = 0;
-                            }
+                            grid[i + 1][j] = grid[i][j];
+                            grid[i][j] = 0;
                         }
-
-                    }
-                }
-
-                if(shiftAliens)
-                {
-                    break;
-                }
-            }
-        }
-    }
-
-    if(shiftAliens)
-    {
-        for(int i = ROWS - 1; i >= 0; i--)
-        {
-            for(int j = COLUMNS - 1; j >= 0; j--)
-            {
-                if(grid[i][j] == 1)
-                {
-                    if((i + 1) >= ROWS)
-                    {
-                        // Game Over
-                    }
-                    else
-                    {
-                        grid[i + 1][j] = grid[i][j];
-                        grid[i][j] = 0;
                     }
                 }
             }
-        }
 
-qDebug() << "Called top row inc";
-        invadersTopRow++;
+            invadersTopRow++;
+        }
     }
 
 }
 
 void GameManager::alienFireSelect()
 {
-    int grid_i = rand() % 40;
-    int grid_j = rand() % 40;
-    if(grid[grid_i][grid_j] == 1)
+    if(!gameOver)
     {
-        int invader_i = grid_i - invadersTopRow;
-        int invader_j = grid_j - invadersLeftColumn;
-        alienVec.at(invader_i + invader_j)->Fire();
-        alienFireTracker[bulletIndex] = (invader_i + invader_j);
+        int invader_i = rand() % 5;
+        int invader_j = rand() % 11;
+        if(alienVec.at((invader_i * 11) + invader_j) != NULL)
+        {
+            alienVec.at((invader_i * 11) + invader_j)->Fire();
+            alienFireTracker[bulletIndex] = ((invader_i * 11) + invader_j);
+        }
     }
 }
-
-/// alienFire Logic
-///
-///     grid_i = rand() % 40;
-///     grid_j = rand() % 40;
-///     if(grid[i][j] == 1)
-///     {
-///         invader_i = grid_i - invadersTopRow;
-///         invader_j = grid_j - invadersLeftColumn;
-///         alienVec.at(invader_i + invader_j)->Fire();
-///         alienFireTracker[bulletIndex] = (invader_i + invader_j);
-///     }
-///

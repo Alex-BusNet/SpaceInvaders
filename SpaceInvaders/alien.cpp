@@ -1,12 +1,15 @@
 #include "alien.h"
+#include <QDebug>
+#include "gamemanager.h"
 #define SIZE 3
 Alien::Alien(int type, int posX, int posY)
 {
     this->type = type;
-    this->posX = posX;
+    this->posX = posX - 30;
     this->posY = posY;
-    this->frame = 0;
+    this->frame = 1;
     direction = 1; // 0 = Left, 1 = Right
+    this->canFire = true;
 }
 
 void Alien::drawAlien(QPainter *paint, bool updateFrame, bool shiftDown)
@@ -18,10 +21,10 @@ void Alien::drawAlien(QPainter *paint, bool updateFrame, bool shiftDown)
         {
             if(alienRenders[type][frame][i][j] == 1)
             {
-                paint->drawRect(QRect(rX, rY, SIZE, SIZE));
+                paint->drawRect(QRect(rX, rY, SIZE - 1, SIZE));
             }
 
-            rX += SIZE;
+            rX += SIZE - 1;
         }
 
         rX = posX;
@@ -57,12 +60,12 @@ void Alien::drawAlien(QPainter *paint, bool updateFrame, bool shiftDown)
             if(direction == 0)
             {
                 // Moving left
-                posX -= 20;
+                posX -= 30;
             }
             else if(direction == 1)
             {
                 // Moving right
-                posX += 20;
+                posX += 30;
             }
         }
     }
@@ -92,13 +95,11 @@ bool Alien::CheckCollision(int bulletX, int bulletY, int type)
 
 void Alien::Fire()
 {
-    /// if(canFire)
-    /// {
-    ///     canFire = false;
-    ///     GameManager::addBullet(false, posX + 20, y); <- Y is the bottom center of the alien.
-    ///                                                     Still need to figure out how to calculate
-    ///                                                       this.
-    /// }
+    if(canFire)
+    {
+        canFire = false;
+        GameManager::addBullet(false, posX + 15, posY + 18);
+    }
 }
 
 void Alien::ResetFire()

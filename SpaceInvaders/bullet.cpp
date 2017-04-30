@@ -11,24 +11,27 @@ Bullet::Bullet(bool player, int posX, int posY)
 
 void Bullet::drawBullet(QPainter *paint)
 {
-    if(player){
-    int rX = posX, rY = posY;
-    for(int i = 0; i < 5; i++)
+    if(player)
     {
-        for(int j = 0; j < 2; j++)
+        int rX = posX, rY = posY;
+        for(int i = 0; i < 5; i++)
         {
-            if(bulletRender[i][j] == 1)
+            for(int j = 0; j < 2; j++)
             {
-                paint->drawRect(rX, rY, 1, 1);
+                if(bulletRender[i][j] == 1)
+                {
+                    paint->drawRect(rX, rY, 1, 1);
+                }
+
+                rX += 1;
             }
 
-            rX += 1;
+            rX = posX;
+            rY += 1;
         }
-
-        rX = posX;
-        rY += 1;
     }
-    }else{
+    else
+    {
         int rX = posX, rY = posY;
         for(int i = 0; i < 5; i++)
         {
@@ -39,11 +42,11 @@ void Bullet::drawBullet(QPainter *paint)
                     paint->drawRect(rX, rY, 1, 1);
                 }
 
-                rX += 1;
+                rX += 2;
             }
 
             rX = posX;
-            rY += 1;
+            rY += 2;
         }
     }
 
@@ -68,7 +71,8 @@ void Bullet::UpdatePos()
     }
     else
     {
-        posY += 5;
+        posY += 3;
+
         if(frame == 0)
             frame = 1;
         else

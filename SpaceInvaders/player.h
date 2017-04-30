@@ -5,8 +5,6 @@
 #include <QPainter>
 #include <QPolygon>
 
-
-
 class Player
 {
 public:
@@ -16,6 +14,9 @@ public:
     void InputHandler(QKeyEvent *e, bool isPressed);
     void UpdatePosition();
     void ResetLaser();
+    bool CheckCollision(int bulletX, int bulletY);
+    bool RemoveLife();
+    void SetPosition(int posX, int posY);
 
 private:
     void Fire();

@@ -98,9 +98,9 @@ void Player::UpdatePosition()
         direction = -1;
     }
 
-    if((0 == direction) && (posX >= 18) && isMovingLeft)
+    if((0 == direction) && (posX >= 5) && isMovingLeft)
         posX -= 5;
-    else if((1 == direction) && ((posX + 45) <= 850) && isMovingRight)
+    else if((1 == direction) && ((posX + 45) <= 925) && isMovingRight)
         posX += 5;
     else
         posX = posX;
@@ -111,9 +111,38 @@ void Player::ResetLaser()
     laserReady = true;
 }
 
+bool Player::CheckCollision(int bulletX, int bulletY)
+{
+    if(bulletX >= posX && bulletX <= posX + 45)
+    {
+        if(bulletY >= posY && bulletY <= posY + 30)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Player::RemoveLife()
+{
+    lives--;
+    if(lives <= 0)
+    {
+        return true;
+    }
+
+    return false;
+}
+
+void Player::SetPosition(int posX, int posY)
+{
+    this->posX = posX;
+    this->posY = posY;
+}
+
 void Player::Fire()
 {
-    qDebug() << "fire";
     laserReady = false;
     GameManager::addBullet(true, posX + 28, posY + 6);
 }
