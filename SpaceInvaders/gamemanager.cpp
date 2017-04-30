@@ -41,7 +41,7 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
     gameUpdateTimer->start();
     bulletUpdateTimer->start();
     alienBulletTimer->start();
-    ufoSpawnTimer->start();
+//    ufoSpawnTimer->start();
 }
 
 GameManager::~GameManager()
@@ -487,7 +487,7 @@ void GameManager::updateBullets()
                             int index = (invader_i * 11) + invader_j;
                             if(index >= 0 && alienVec.at(index) != NULL)
                             {
-                                if(alienVec.at(index)->CheckCollision(bulletRelPosX, bulletRelPosY, invader[invader_i][invader_j]))
+                                if(alienVec.at(index)->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]))
                                 {
                                     grid[grid_i][grid_j] = 0;
                                     alienVec.at(index)->kill();
