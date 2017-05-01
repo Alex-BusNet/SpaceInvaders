@@ -3,8 +3,6 @@
 
 #include <QPainter>
 
-
-
 class Alien
 {
 public:

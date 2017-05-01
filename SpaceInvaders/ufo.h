@@ -5,10 +5,10 @@
 
 
 
-class ufo
+class UFO
 {
 public:
-    ufo(int x, int y, bool leftSide);
+    UFO(int x, int y, bool leftSide);
     void drawUFO(QPainter *paint, bool updateFrame);
     bool CheckCollision(int bulletX, int bulletY);
     int GetPosY();
@@ -20,7 +20,7 @@ private:
     bool startOnLeft, deleteLater;
     int posX, posY, frame;
 
-    int UFO[2][7][16] =
+    int ufo[2][7][16] =
     {
         // Frame 0
         {

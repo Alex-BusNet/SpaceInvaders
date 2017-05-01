@@ -14,28 +14,29 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
 {
     this->setFixedSize(930, 750);
 
-    SetupGame(true);
     srand(time(0));
 
-    alienAnimationTimer = new QTimer(this);
-    alienAnimationTimer->setInterval(500);
+    alienAnimationTimer = new QTimer();
+    alienAnimationTimer->setInterval(499);
     connect(alienAnimationTimer, SIGNAL(timeout()), this, SLOT(updateAliens()));
 
-    gameUpdateTimer = new QTimer(this);
+    gameUpdateTimer = new QTimer();
     gameUpdateTimer->setInterval(17);
     connect(gameUpdateTimer, SIGNAL(timeout()), this, SLOT(update()));
 
-    bulletUpdateTimer = new QTimer(this);
+    bulletUpdateTimer = new QTimer();
     bulletUpdateTimer->setInterval(15);
     connect(bulletUpdateTimer, SIGNAL(timeout()), this, SLOT(updateBullets()));
 
-    alienBulletTimer = new QTimer(this);
+    alienBulletTimer = new QTimer();
     alienBulletTimer->setInterval(500);
     connect(alienBulletTimer, SIGNAL(timeout()), this, SLOT(alienFireSelect()));
 
-    ufoSpawnTimer = new QTimer(this);
+    ufoSpawnTimer = new QTimer();
     ufoSpawnTimer->setInterval(100);
     connect(ufoSpawnTimer, SIGNAL(timeout()), this, SLOT(spawnUFO()));
+
+    SetupGame(true);
 
     alienAnimationTimer->start();
     gameUpdateTimer->start();
@@ -151,15 +152,15 @@ void GameManager::paintEvent(QPaintEvent *e)
                 shiftAliens = false;
             }
 
-            if(UFO != NULL)
+            if(ufo != NULL)
             {
-                if(!UFO->isMarked())
-                    UFO->drawUFO(&paint, updateUFO);
+                if(!ufo->isMarked())
+                    ufo->drawUFO(&paint, updateUFO);
 
-                if(UFO->GetPosX() < 30 && !UFO->StartedOnLeft())
-                    UFO->MarkForDelete();
-                else if(UFO->GetPosX() > 900 && UFO->StartedOnLeft())
-                    UFO->MarkForDelete();
+                if(ufo->GetPosX() < 30 && !ufo->StartedOnLeft())
+                    ufo->MarkForDelete();
+                else if(ufo->GetPosX() > 900 && ufo->StartedOnLeft())
+                    ufo->MarkForDelete();
 
                 if(updateUFO)
                     updateUFO = false;
@@ -338,8 +339,8 @@ void GameManager::GameOver()
         }
     }
 
-    if(UFO != NULL)
-        delete UFO;
+    if(ufo != NULL)
+        delete ufo;
 
 }
 
@@ -385,8 +386,8 @@ void GameManager::Victory()
         }
     }
 
-    if(UFO != NULL)
-        delete UFO;
+    if(ufo != NULL)
+        delete ufo;
 }
 
 void GameManager::SetupGame(bool newGame)
@@ -400,13 +401,21 @@ void GameManager::SetupGame(bool newGame)
     invadersTopRow = 0;
     invadersLeftColumn = 0;
     invadersRightColumn = 11;
+
     killCount = 0;
     player = new Player(422, 680);
 
     if(newGame)
+    {
         playerScore = 0;
+        levelCount = 1;
+    }
+    else
+    {
+        levelCount++;
+    }
 
-    UFO = NULL;
+    ufo = NULL;
 
     // Initialize the Aliens
     int alienX = 18, alienY = 80;
@@ -482,30 +491,25 @@ void GameManager::updateBullets()
                     {
                         if(grid[grid_i][grid_j] == 1)
                         {
-                            int bulletRelPosX = bullets[h]->GetPosX() % 12;
-                            int bulletRelPosY = bullets[h]->GetPosY() % 12;
                             int index = (invader_i * 11) + invader_j;
                             if(index >= 0 && alienVec.at(index) != NULL)
                             {
-                                if(alienVec.at(index)->CheckCollision(bulletRelPosX, bulletRelPosY, invaders[invader_i][invader_j]))
-                                {
-                                    grid[grid_i][grid_j] = 0;
-                                    alienVec.at(index)->kill();
-                                    killCount++;
-                                    deleteBullet = true;
-                                    playerScore += (invaders[invader_i][invader_j] + 2) * 10;
-                                }
+                                grid[grid_i][grid_j] = 0;
+                                alienVec.at(index)->kill();
+                                killCount++;
+                                deleteBullet = true;
+                                playerScore += (invaders[invader_i][invader_j] + 2) * 10;
                             }
                         }
                     }
 
-                    if(UFO != NULL)
+                    if(ufo != NULL)
                     {
                         if((bullets[h]->GetPosY() <= 70) && (bullets[h]->GetPosY() >= 30))
                         {
-                            if(UFO->CheckCollision(bullets[h]->GetPosX(), bullets[h]->GetPosY()))
+                            if(ufo->CheckCollision(bullets[h]->GetPosX(), bullets[h]->GetPosY()))
                             {
-                                UFO->MarkForDelete();
+                                ufo->MarkForDelete();
                                 playerScore += 200;
                             }
                         }
@@ -698,8 +702,8 @@ void GameManager::spawnUFO()
 {
     if(!gameOver && !levelEnd)
     {
-        if((UFO != NULL) && (UFO->isMarked()))
-            UFO = NULL;
+        if((ufo != NULL) && (ufo->isMarked()))
+            ufo = NULL;
 
         static int spawnCount = 0;
 
@@ -708,16 +712,16 @@ void GameManager::spawnUFO()
             spawnCount = 0;
             int spawn = rand() % 100;
 
-            if((spawn < 10) && (UFO == NULL))
+            if((spawn < 10) && (ufo == NULL))
             {
-                UFO = new ufo(2, 32, true);
+                ufo = new UFO(2, 32, true);
             }
-            else if((spawn > 90) && (UFO == NULL))
+            else if((spawn > 90) && (ufo == NULL))
             {
-                UFO = new ufo(896, 32, false);
+                ufo = new UFO(896, 32, false);
             }
         }
-        else if(UFO != NULL)
+        else if(ufo != NULL)
         {
             updateUFO = true;
         }

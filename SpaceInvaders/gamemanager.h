@@ -6,9 +6,9 @@
 #include "bullet.h"
 #include "ufo.h"
 
-#include <QPaintEvent>
 #include <QPushButton>
 #include <QTimer>
+#include <QPaintEvent>
 #include <QWidget>
 
 class Player;
@@ -33,7 +33,7 @@ private:
     bool pauseGame;
 
     int invadersTopRow, invadersLeftColumn, invadersRightColumn;
-    int playerScore, killCount;
+    int playerScore, killCount, levelCount;
 
     int invaders[5][11] =
     {
@@ -355,7 +355,7 @@ private:
 
     };
     Player* player;
-    ufo *UFO;
+    UFO *ufo;
     QVector<Alien*> alienVec;
     int alienFireTracker[4] = { -1, -1, -1, -1 };
 

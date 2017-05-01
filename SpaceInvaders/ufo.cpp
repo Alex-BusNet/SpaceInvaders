@@ -1,7 +1,7 @@
 #include "ufo.h"
 #include <QDebug>
 
-ufo::ufo(int x, int y, bool leftSide)
+UFO::UFO(int x, int y, bool leftSide)
 {
     this->posX = x;
     this->posY = y;
@@ -10,7 +10,7 @@ ufo::ufo(int x, int y, bool leftSide)
     frame = 0;
 }
 
-void ufo::drawUFO(QPainter *paint, bool updateFrame)
+void UFO::drawUFO(QPainter *paint, bool updateFrame)
 {
     paint->setPen(QPen(Qt::red));
     paint->setBrush(QBrush(Qt::red));
@@ -19,7 +19,7 @@ void ufo::drawUFO(QPainter *paint, bool updateFrame)
     {
         for(int j = 0; j < 16; j++)
         {
-            if(UFO[frame][i][j] == 1)
+            if(ufo[frame][i][j] == 1)
             {
                 paint->drawRect(rX, rY, 2, 2);
             }
@@ -44,9 +44,8 @@ void ufo::drawUFO(QPainter *paint, bool updateFrame)
     }
 }
 
-bool ufo::CheckCollision(int bulletX, int bulletY)
+bool UFO::CheckCollision(int bulletX, int bulletY)
 {
-    qDebug() << "UFO Collision Check";
     if((bulletX >= posX )&& (bulletX <= (posX + 48)))
     {
         if((bulletY >= posY) && (bulletY <= (posY + 53)))
@@ -58,27 +57,27 @@ bool ufo::CheckCollision(int bulletX, int bulletY)
     return false;
 }
 
-int ufo::GetPosY()
+int UFO::GetPosY()
 {
     return posY;
 }
 
-int ufo::GetPosX()
+int UFO::GetPosX()
 {
     return posX;
 }
 
-bool ufo::StartedOnLeft()
+bool UFO::StartedOnLeft()
 {
     return startOnLeft;
 }
 
-void ufo::MarkForDelete()
+void UFO::MarkForDelete()
 {
     deleteLater = true;
 }
 
-bool ufo::isMarked()
+bool UFO::isMarked()
 {
     return deleteLater;
 }
