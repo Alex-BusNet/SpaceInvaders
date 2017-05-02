@@ -146,9 +146,12 @@ int Player::GetShotsFired()
     return shotsFired;
 }
 
-void Player::ResetShotsFired()
+void Player::ResetShotsFired(bool newLevel)
 {
-    shotsFired = 10;
+    if(newLevel)
+        shotsFired = 0;
+    else
+        shotsFired = 10;
 }
 
 void Player::Fire()

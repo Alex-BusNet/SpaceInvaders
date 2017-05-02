@@ -26,9 +26,15 @@ private slots:
 
     void on_ControlClosePB_clicked();
 
+    void updateHighScores();
+    void resetHighScores();
 private:
     Ui::MainWindow *ui;
     GameManager *gm;
+
+    QTimer *updateTimer;
+    void loadHighScores();
+
 };
 
 #endif // MAINWINDOW_H

@@ -16,7 +16,7 @@ class GameManager : public QWidget
 {
     Q_OBJECT
 public:
-    explicit GameManager(QWidget *parent = 0);
+    explicit GameManager(QWidget *parent = 0, int currentHighScore = 0);
     ~GameManager();
     void paintEvent(QPaintEvent *e);
     void keyPressEvent(QKeyEvent *event);
@@ -34,6 +34,7 @@ private:
 
     int invadersTopRow, invadersLeftColumn, invadersRightColumn;
     int playerScore, killCount, levelCount;
+    int scoreToBeat;
 
     int invaders[5][11] =
     {
@@ -377,6 +378,7 @@ private:
     void Victory();
     void SetupGame(bool newGame);
     void UpdateHighscores();
+
 signals:
 
 public slots:

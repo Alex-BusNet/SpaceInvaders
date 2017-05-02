@@ -5,6 +5,7 @@
 #include <ctime>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QJsonObject>
 
 #define ROWS 15
 #define COLUMNS 30
@@ -13,15 +14,17 @@
 #define SHIFT_AMOUNT 30
 #define GRID_END ((X_OFFSET * 11) + (SHIFT_AMOUNT * (COLUMNS - 11)) + 15)
 
-GameManager::GameManager(QWidget *parent) : QWidget(parent)
+GameManager::GameManager(QWidget *parent, int currentHighScore) : QWidget(parent)
 {
     this->setFixedSize(930, 750);
-
+    this->setAttribute(Qt::WA_DeleteOnClose, true);
     srand(time(0));
 
     mp_player = new QMediaPlayer();
     mp_alienHit = new QMediaPlayer();
     mp_ufo = new QMediaPlayer();
+
+    this->scoreToBeat = currentHighScore;
 
     alienAnimationTimer = new QTimer();
     alienAnimationTimer->setInterval(350);
@@ -226,8 +229,8 @@ void GameManager::paintEvent(QPaintEvent *e)
         QFont font("Courier", 10, 1);
         paint.setFont(font);
         paint.drawText(20, 735, QString("%1").arg(player->GetLivesRemaining()));
-        paint.drawText(20, 20, QString::number(playerScore));
-        paint.drawText(380, 20, "<<ADD HIGH SCORE>>");
+        paint.drawText(20, 20, QString("SCORE 1<%1>").arg(playerScore, 6, 10, QChar('0')));
+        paint.drawText(380, 20, QString("HIGHSCORE<%1>").arg(this->scoreToBeat, 6, 10, QChar('0')));
         /// Add high score tracker
     }
     else if(gameOver && !levelEnd)
@@ -422,6 +425,7 @@ void GameManager::SetupGame(bool newGame)
 
     killCount = 0;
     player = new Player(422, 680);
+    player->ResetShotsFired(true);
 
     if(newGame)
     {
@@ -457,18 +461,22 @@ void GameManager::SetupGame(bool newGame)
 void GameManager::UpdateHighscores()
 {
     QFile highscores("../SpaceInvaders/Assets/highscores.json");
-    if(!highscores.open(QIODevice::ReadWrite))
+    if(!highscores.open(QIODevice::ReadOnly))
     {
         qWarning("Could not open highscores file");
         return;
     }
+
     QByteArray byteArr = highscores.readAll();
     QJsonDocument hs = QJsonDocument::fromJson(byteArr);
-    QJsonArray scores = hs.array();
+    QJsonObject obj = hs.object();
+    QJsonArray scores = obj["scores"].toArray();
+
+    highscores.close();
 
     int scoreArr[10];
 
-    for(int i = 0; i < scores.size(); i++)
+    for(int i = 0; i < 10; i++)
     {
         scoreArr[i] = scores.at(i).toInt();
     }
@@ -476,27 +484,42 @@ void GameManager::UpdateHighscores()
     scores.empty();
 
     int newScore = playerScore;
-    for(int i = 9; i >= 0; i--){
-        if(newScore > scoreArr[i]){
+    for(int i = 9; i >= 0; i--)
+    {
+        if(newScore > scoreArr[i])
+        {
             if(i > 0)
                 scoreArr[i] = scoreArr[i-1];
-            else{
+            else
+            {
                 scoreArr[i] = newScore;
                 break;
             }
-        }else if(newScore < scoreArr[i]){
-            if(i < 9){
+        }
+        else if(newScore < scoreArr[i])
+        {
+            if(i < 9)
+            {
                 scoreArr[i+1] = newScore;
                 break;
             }
-        }else
+        }
+        else
             break;
     }
-    for(int i = 0; i < 10; i++){
-        scores.push_back(scoreArr[i]);
+
+    for(int i = 0; i < 10; i++)
+    {
+        scores.replace(i, scoreArr[i]);
     }
-    hs.setArray(scores);
-    highscores.write(hs.toJson());
+
+    obj["scores"] = scores;
+    hs.setObject(obj);
+    if(highscores.open(QIODevice::WriteOnly))
+    {
+        highscores.write(hs.toJson());
+    }
+
     highscores.flush();
     highscores.close();
 }
@@ -565,6 +588,10 @@ void GameManager::updateBullets()
                                 killCount++;
                                 deleteBullet = true;
                                 playerScore += (invaders[invader_i][invader_j] + 2) * 10;
+
+                                if(playerScore > scoreToBeat)
+                                    scoreToBeat = playerScore;
+
                                 mp_alienHit->setMedia(QUrl::fromLocalFile("../SpaceInvaders/Assets/Sound/invaderkilled.wav"));
                                 mp_alienHit->play();
                             }
@@ -777,7 +804,7 @@ void GameManager::spawnUFO()
 
         if(player->GetShotsFired() == 25)
         {
-            player->ResetShotsFired();
+            player->ResetShotsFired(false);
             int spawn = rand() % 100;
 
             if((spawn < 50) && (ufo == NULL))

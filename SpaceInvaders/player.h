@@ -18,7 +18,7 @@ public:
     bool RemoveLife();
     void SetPosition(int posX, int posY);
     int GetShotsFired();
-    void ResetShotsFired();
+    void ResetShotsFired(bool newLevel);
 
 private:
     void Fire();
