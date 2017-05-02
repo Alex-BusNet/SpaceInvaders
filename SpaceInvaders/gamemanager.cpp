@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <random>
 #include <ctime>
+
 #define ROWS 15
 #define COLUMNS 30
 #define X_OFFSET 30
@@ -16,8 +17,12 @@ GameManager::GameManager(QWidget *parent) : QWidget(parent)
 
     srand(time(0));
 
+    mp_player = new QMediaPlayer();
+    mp_alienHit = new QMediaPlayer();
+    mp_ufo = new QMediaPlayer();
+
     alienAnimationTimer = new QTimer();
-    alienAnimationTimer->setInterval(499);
+    alienAnimationTimer->setInterval(350);
     connect(alienAnimationTimer, SIGNAL(timeout()), this, SLOT(updateAliens()));
 
     gameUpdateTimer = new QTimer();
@@ -103,7 +108,10 @@ void GameManager::paintEvent(QPaintEvent *e)
                     if(i >= invadersTopRow && i < invadersTopRow + 5)
                     {
                         if(j >= invadersLeftColumn && j < invadersRightColumn)
+                        {
                             paint.drawText(posX + 5, posY + 15, QString("%1").arg(grid[i][j]));
+                            paint.drawText(posX + 20, posY + 15, (alienVec.at(((i - invadersTopRow) * 11) + (j - invadersLeftColumn))->isAlive() ? QString("A") : QString("D")));
+                        }
                     }
                 }
 
@@ -213,7 +221,7 @@ void GameManager::paintEvent(QPaintEvent *e)
         //================
 
         paint.drawLine(QLine(0, 720, 900, 720));
-        QFont font("TypeWriter", 10, 1);
+        QFont font("Courier", 10, 1);
         paint.setFont(font);
         paint.drawText(20, 735, QString("%1").arg(player->GetLivesRemaining()));
         paint.drawText(20, 20, QString::number(playerScore));
@@ -279,6 +287,8 @@ void GameManager::addBullet(bool player, int posX, int posY)
     if(player)
     {
         bullets[0] = new Bullet(true, posX, posY);
+        mp_player->setMedia(QUrl::fromLocalFile("../SpaceInvaders/Assets/Sound/player_shoot.wav"));
+        mp_player->play();
     }
     else
     {
@@ -328,6 +338,14 @@ void GameManager::GameOver()
         }
     }
 
+    for(int i = 0; i < 5; i++)
+    {
+        for(int j = 0; j < 11; j++)
+        {
+            invaders[i][j] = invadersRef[i][j];
+        }
+    }
+
     for(int k = 0; k < 4; k++)
     {
         for(int i = 0; i < 30; i++)
@@ -372,6 +390,14 @@ void GameManager::Victory()
         for(int j = 0; j < 30; j++)
         {
             grid[i][j] = 0;
+        }
+    }
+
+    for(int i = 0; i < 5; i++)
+    {
+        for(int j = 0; j < 11; j++)
+        {
+            invaders[i][j] = invadersRef[i][j];
         }
     }
 
@@ -495,10 +521,13 @@ void GameManager::updateBullets()
                             if(index >= 0 && alienVec.at(index) != NULL)
                             {
                                 grid[grid_i][grid_j] = 0;
+                                invaders[invader_i][invader_j] = 3;
                                 alienVec.at(index)->kill();
                                 killCount++;
                                 deleteBullet = true;
                                 playerScore += (invaders[invader_i][invader_j] + 2) * 10;
+                                mp_alienHit->setMedia(QUrl::fromLocalFile("../SpaceInvaders/Assets/Sound/invaderkilled.wav"));
+                                mp_alienHit->play();
                             }
                         }
                     }
@@ -523,6 +552,8 @@ void GameManager::updateBullets()
                 {
                     if(player->CheckCollision(bullets[h]->GetPosX(), bullets[h]->GetPosY()))
                     {
+                        mp_alienHit->setMedia(QUrl::fromLocalFile("../SpaceInvaders/Assets/Sound/explosion.wav"));
+                        mp_alienHit->play();
                         if(player->RemoveLife())
                         {
                             GameOver();
@@ -724,6 +755,9 @@ void GameManager::spawnUFO()
         else if(ufo != NULL)
         {
             updateUFO = true;
+            mp_ufo->setMedia(QUrl::fromLocalFile("../SpaceInvaders/Assets/Sound/ufo_highpitch.wav"));
+            mp_ufo->setVolume(75);
+            mp_ufo->play();
         }
         else
         {

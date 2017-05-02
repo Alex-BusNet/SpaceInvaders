@@ -5,7 +5,7 @@
 #include "player.h"
 #include "bullet.h"
 #include "ufo.h"
-
+#include <QMediaPlayer>
 #include <QPushButton>
 #include <QTimer>
 #include <QPaintEvent>
@@ -36,6 +36,15 @@ private:
     int playerScore, killCount, levelCount;
 
     int invaders[5][11] =
+    {
+        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    };
+
+    int invadersRef[5][11] =
     {
         {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -364,7 +373,6 @@ private:
     QTimer *bulletUpdateTimer;
     QTimer *alienBulletTimer;
     QTimer *ufoSpawnTimer;
-
     void GameOver();
     void Victory();
     void SetupGame(bool newGame);
@@ -379,6 +387,9 @@ private slots:
     void spawnUFO();
 };
 
+static QMediaPlayer *mp_player;
+static QMediaPlayer *mp_alienHit;
+static QMediaPlayer *mp_ufo;
 static Bullet* bullets[5];
 static int bulletIndex = 0;
 

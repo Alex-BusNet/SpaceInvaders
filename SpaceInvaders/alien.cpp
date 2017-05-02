@@ -39,7 +39,10 @@ void Alien::drawAlien(QPainter *paint, bool updateFrame, bool shiftDown)
     {
         if(frame == 1)
         {
-            frame = 0;
+            if(type == 3)
+                alive = false;
+            else
+                frame = 0;
         }
         else
         {
@@ -121,5 +124,15 @@ bool Alien::isAlive()
 
 void Alien::kill()
 {
-    alive = false;
+    type =  3;
+    frame = 1;
+}
+
+void Alien::ResetAlien(int type, int posX, int posY)
+{
+    this->type = type;
+    this->posX = posX;
+    this->posY = posY;
+    alive = true;
+    frame = 0;
 }

@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     gm = NULL;
 
     this->setStyleSheet(mainStyle);
+    this->setWindowTitle("Space Invaders");
 
     ui->ControlClosePB->hide();
     ui->frame->hide();
