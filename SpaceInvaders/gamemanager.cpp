@@ -313,6 +313,7 @@ void GameManager::addBullet(bool player, int posX, int posY)
 void GameManager::GameOver()
 {
     gameOver = true;
+    UpdateHighscores();
 
     if(player != NULL)
         delete player;
@@ -489,7 +490,10 @@ void GameManager::UpdateHighscores()
         if(newScore > scoreArr[i])
         {
             if(i > 0)
-                scoreArr[i] = scoreArr[i-1];
+            {
+                if(scoreArr[i - 1] != newScore)
+                    scoreArr[i] = scoreArr[i-1];
+            }
             else
             {
                 scoreArr[i] = newScore;
@@ -500,7 +504,10 @@ void GameManager::UpdateHighscores()
         {
             if(i < 9)
             {
-                scoreArr[i+1] = newScore;
+                if(scoreArr[i + 1] != newScore)
+                {
+                    scoreArr[i+1] = newScore;
+                }
                 break;
             }
         }

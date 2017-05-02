@@ -7,7 +7,7 @@
 #include <qjsondocument.h>
 
 
-QKeySequence *resetScores = new QKeySequence("Ctrl+R");
+QKeySequence *resetScores = new QKeySequence("Alt+R");
 QShortcut *rsShortcut;
 
 MainWindow::MainWindow(QWidget *parent) :
