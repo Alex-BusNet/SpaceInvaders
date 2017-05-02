@@ -134,7 +134,6 @@ void MainWindow::updateHighScores()
 
 void MainWindow::resetHighScores()
 {
-    qDebug() << "Reset High Scores Triggered";
     QFile highscores("../SpaceInvaders/Assets/highscores.json");
     QJsonDocument hs;
     QJsonObject obj;

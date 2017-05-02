@@ -103,35 +103,35 @@ void GameManager::paintEvent(QPaintEvent *e)
         // Grid Rendering
         //=================
 
-        int posX = 15, posY = 70;
-        for(int i = 0; i < ROWS; i++)
-        {
-            for(int j = 0; j < COLUMNS; j++)
-            {
-                if(!levelEnd)
-                {
-                    if(i >= invadersTopRow && i < invadersTopRow + 5)
-                    {
-                        if(j >= invadersLeftColumn && j < invadersRightColumn)
-                        {
-                            paint.drawText(posX + 5, posY + 15, QString("%1").arg(grid[i][j]));
-                            paint.drawText(posX + 20, posY + 15, (alienVec.at(((i - invadersTopRow) * 11) + (j - invadersLeftColumn))->isAlive() ? QString("A") : QString("D")));
-                        }
-                    }
-                }
+//        int posX = 15, posY = 70;
+//        for(int i = 0; i < ROWS; i++)
+//        {
+//            for(int j = 0; j < COLUMNS; j++)
+//            {
+//                if(!levelEnd)
+//                {
+//                    if(i >= invadersTopRow && i < invadersTopRow + 5)
+//                    {
+//                        if(j >= invadersLeftColumn && j < invadersRightColumn)
+//                        {
+//                            paint.drawText(posX + 5, posY + 15, QString("%1").arg(grid[i][j]));
+//                            paint.drawText(posX + 20, posY + 15, (alienVec.at(((i - invadersTopRow) * 11) + (j - invadersLeftColumn))->isAlive() ? QString("A") : QString("D")));
+//                        }
+//                    }
+//                }
 
-                posX += X_OFFSET;
-            }
+//                posX += X_OFFSET;
+//            }
 
-            posX = 15;
-            posY += Y_OFFSET;
-        }
-        paint.setPen(QPen(Qt::green));
-        paint.drawText(15, 35, QString("Left column: %1    Right column: %2    Top row: %3    Kill count: %4    Shots fired: %5").arg(invadersLeftColumn).arg(invadersRightColumn).arg(invadersTopRow).arg(killCount).arg(player->GetShotsFired()));
-        paint.drawLine((invadersLeftColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersLeftColumn * 30) + 15, ((invadersTopRow + 5) * 40) + 70);
-        paint.drawLine((invadersRightColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersRightColumn * 30) + 15, ((invadersTopRow + 5) * 40) + 70);
-        paint.drawLine((invadersLeftColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersRightColumn * 30) + 15, (invadersTopRow * 40) + 70);
-        paint.setPen(QPen(Qt::white));
+//            posX = 15;
+//            posY += Y_OFFSET;
+//        }
+//        paint.setPen(QPen(Qt::green));
+//        paint.drawText(15, 35, QString("Left column: %1    Right column: %2    Top row: %3    Kill count: %4    Shots fired: %5").arg(invadersLeftColumn).arg(invadersRightColumn).arg(invadersTopRow).arg(killCount).arg(player->GetShotsFired()));
+//        paint.drawLine((invadersLeftColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersLeftColumn * 30) + 15, ((invadersTopRow + 5) * 40) + 70);
+//        paint.drawLine((invadersRightColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersRightColumn * 30) + 15, ((invadersTopRow + 5) * 40) + 70);
+//        paint.drawLine((invadersLeftColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersRightColumn * 30) + 15, (invadersTopRow * 40) + 70);
+//        paint.setPen(QPen(Qt::white));
 
         //======================
         // Projectile Rendering
