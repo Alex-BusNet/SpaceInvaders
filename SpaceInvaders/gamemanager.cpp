@@ -3,6 +3,8 @@
 #include <QPainter>
 #include <random>
 #include <ctime>
+#include <QJsonArray>
+#include <QJsonDocument>
 
 #define ROWS 15
 #define COLUMNS 30
@@ -266,6 +268,7 @@ void GameManager::keyPressEvent(QKeyEvent *event)
     }
     else if(event->key() == Qt::Key_Escape)
     {
+        UpdateHighscores();
         this->close();
     }
     else
@@ -460,6 +463,53 @@ void GameManager::SetupGame(bool newGame)
 
     levelEnd = false;
     gameOver = false;
+}
+
+void GameManager::UpdateHighscores()
+{
+    QFile highscores("../SpaceInvaders/Assets/highscores.json");
+    if(!highscores.open(QIODevice::ReadWrite))
+    {
+        qWarning("Could not open highscores file");
+        return;
+    }
+    QByteArray byteArr = highscores.readAll();
+    QJsonDocument hs = QJsonDocument::fromJson(byteArr);
+    QJsonArray scores = hs.array();
+
+    int scoreArr[10];
+
+    for(int i = 0; i < scores.size(); i++)
+    {
+        scoreArr[i] = scores.at(i).toInt();
+    }
+
+    scores.empty();
+
+    int newScore = playerScore;
+    for(int i = 9; i >= 0; i--){
+        if(newScore > scoreArr[i]){
+            if(i > 0)
+                scoreArr[i] = scoreArr[i-1];
+            else{
+                scoreArr[i] = newScore;
+                break;
+            }
+        }else if(newScore < scoreArr[i]){
+            if(i < 9){
+                scoreArr[i+1] = newScore;
+                break;
+            }
+        }else
+            break;
+    }
+    for(int i = 0; i < 10; i++){
+        scores.push_back(scoreArr[i]);
+    }
+    hs.setArray(scores);
+    highscores.write(hs.toJson());
+    highscores.flush();
+    highscores.close();
 }
 
 void GameManager::updateBullets()
@@ -765,3 +815,5 @@ void GameManager::spawnUFO()
         }
     }
 }
+
+

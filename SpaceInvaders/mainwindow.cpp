@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QJsonArray>
+#include <qjsondocument.h>
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -14,6 +17,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
     gm = NULL;
+
+    this->setFixedSize(this->width(),this->height());
 
     this->setStyleSheet(mainStyle);
     this->setWindowTitle("Space Invaders");
@@ -31,6 +36,24 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_6->hide();
     ui->label_7->hide();
     ui->label_8->hide();
+
+    QFile highscores("../SpaceInvaders/Assets/highscores.json");
+    if(!highscores.open(QIODevice::ReadWrite))
+    {
+        qWarning("Could not open highscores file");
+        return;
+    }
+    QByteArray byteArr = highscores.readAll();
+    QJsonDocument hs = QJsonDocument::fromJson(byteArr);
+    QJsonArray scores = hs.array();
+
+    int scoreArr[10];
+
+    for(int i = 0; i < scores.size(); i++)
+    {
+        ui->listWidget->addItem(scores.at(i).toString());
+    }
+
 }
 
 MainWindow::~MainWindow()

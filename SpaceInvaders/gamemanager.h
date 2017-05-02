@@ -376,6 +376,7 @@ private:
     void GameOver();
     void Victory();
     void SetupGame(bool newGame);
+    void UpdateHighscores();
 signals:
 
 public slots:
