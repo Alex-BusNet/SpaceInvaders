@@ -124,7 +124,7 @@ void GameManager::paintEvent(QPaintEvent *e)
             posY += Y_OFFSET;
         }
         paint.setPen(QPen(Qt::green));
-        paint.drawText(15, 35, QString("Left column: %1    Right column: %2    Top row: %3    Kill count: %4").arg(invadersLeftColumn).arg(invadersRightColumn).arg(invadersTopRow).arg(killCount));
+        paint.drawText(15, 35, QString("Left column: %1    Right column: %2    Top row: %3    Kill count: %4    Shots fired: %5").arg(invadersLeftColumn).arg(invadersRightColumn).arg(invadersTopRow).arg(killCount).arg(player->GetShotsFired()));
         paint.drawLine((invadersLeftColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersLeftColumn * 30) + 15, ((invadersTopRow + 5) * 40) + 70);
         paint.drawLine((invadersRightColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersRightColumn * 30) + 15, ((invadersTopRow + 5) * 40) + 70);
         paint.drawLine((invadersLeftColumn * 30) + 15, (invadersTopRow * 40) + 70, (invadersRightColumn * 30) + 15, (invadersTopRow * 40) + 70);
@@ -401,17 +401,6 @@ void GameManager::Victory()
         for(int j = 0; j < 11; j++)
         {
             invaders[i][j] = invadersRef[i][j];
-        }
-    }
-
-    for(int k = 0; k < 4; k++)
-    {
-        for(int i = 0; i < 30; i++)
-        {
-            for(int j = 0; j < 44; j++)
-            {
-                bunker[k][i][j] = bunkerRef[k][i][j];
-            }
         }
     }
 
@@ -786,18 +775,16 @@ void GameManager::spawnUFO()
         if((ufo != NULL) && (ufo->isMarked()))
             ufo = NULL;
 
-        static int spawnCount = 0;
-
-        if(spawnCount == 100)
+        if(player->GetShotsFired() == 25)
         {
-            spawnCount = 0;
+            player->ResetShotsFired();
             int spawn = rand() % 100;
 
-            if((spawn < 10) && (ufo == NULL))
+            if((spawn < 50) && (ufo == NULL))
             {
                 ufo = new UFO(2, 32, true);
             }
-            else if((spawn > 90) && (ufo == NULL))
+            else if((spawn > 49) && (ufo == NULL))
             {
                 ufo = new UFO(896, 32, false);
             }
@@ -808,10 +795,6 @@ void GameManager::spawnUFO()
             mp_ufo->setMedia(QUrl::fromLocalFile("../SpaceInvaders/Assets/Sound/ufo_highpitch.wav"));
             mp_ufo->setVolume(75);
             mp_ufo->play();
-        }
-        else
-        {
-           spawnCount++;
         }
     }
 }

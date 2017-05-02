@@ -141,9 +141,20 @@ void Player::SetPosition(int posX, int posY)
     this->posY = posY;
 }
 
+int Player::GetShotsFired()
+{
+    return shotsFired;
+}
+
+void Player::ResetShotsFired()
+{
+    shotsFired = 10;
+}
+
 void Player::Fire()
 {
     laserReady = false;
+    shotsFired++;
     GameManager::addBullet(true, posX + 28, posY + 6);
 }
 

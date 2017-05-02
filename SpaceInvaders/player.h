@@ -17,11 +17,13 @@ public:
     bool CheckCollision(int bulletX, int bulletY);
     bool RemoveLife();
     void SetPosition(int posX, int posY);
+    int GetShotsFired();
+    void ResetShotsFired();
 
 private:
     void Fire();
     int posX, posY;
-    int lives;
+    int lives, shotsFired;
     int direction, lastDirection; // -1 = no movement, 0 = left, 1 = right
     bool laserReady, moveLeft, moveRight, isMovingLeft, isMovingRight;
 
