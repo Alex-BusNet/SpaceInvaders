@@ -27,7 +27,7 @@ GameManager::GameManager(QWidget *parent, int currentHighScore) : QWidget(parent
     this->scoreToBeat = currentHighScore;
 
     alienAnimationTimer = new QTimer();
-    alienAnimationTimer->setInterval(350);
+    alienAnimationTimer->setInterval(500);
     connect(alienAnimationTimer, SIGNAL(timeout()), this, SLOT(updateAliens()));
 
     gameUpdateTimer = new QTimer();
@@ -258,6 +258,12 @@ void GameManager::paintEvent(QPaintEvent *e)
             player->drawPlayer(&paint);
         }
     }
+
+    if(killCount == 55 && ufo == NULL)
+    {
+        Victory();
+        return;
+    }
 }
 
 void GameManager::keyPressEvent(QKeyEvent *event)
@@ -274,6 +280,10 @@ void GameManager::keyPressEvent(QKeyEvent *event)
         UpdateHighscores();
         this->close();
     }
+//    else if(event->key() == Qt::Key_Right)
+//    {
+//        updateAliens();
+//    }
     else
     {
         player->InputHandler(event, true);
@@ -494,7 +504,7 @@ void GameManager::UpdateHighscores()
                 if(scoreArr[i - 1] != newScore)
                     scoreArr[i] = scoreArr[i-1];
             }
-            else
+            else // i == 0
             {
                 scoreArr[i] = newScore;
                 break;
@@ -510,8 +520,10 @@ void GameManager::UpdateHighscores()
                 }
                 break;
             }
+            else // i == 9
+                break;
         }
-        else
+        else // newScore == scoreArr[i]
             break;
     }
 
@@ -543,9 +555,57 @@ void GameManager::updateBullets()
                 bullets[h]->UpdatePos();
 
                 //=================
+                // Alien Collision
+                //=================
+                if(h == 0)
+                {
+                    int grid_j = (bullets[h]->GetPosX() - 15) / X_OFFSET;
+                    int grid_i = (bullets[h]->GetPosY() - 70) / Y_OFFSET;
+
+                    // Find invader coord to determine type:
+                    int invader_i = grid_i - invadersTopRow;
+                    int invader_j = grid_j - invadersLeftColumn;
+
+                    if((invader_i < 5) && (invader_j < 11) && (invader_i >= 0) && (invader_j >= 0))
+                    {
+                        if(grid[grid_i][grid_j] == 1)
+                        {
+                            int index = (invader_i * 11) + invader_j;
+                            if(index >= 0 && index < alienVec.size() && alienVec.at(index)->isAlive())
+                            {
+                                playerScore += (invaders[invader_i][invader_j] + 2) * 10;
+                                grid[grid_i][grid_j] = 0;
+                                invaders[invader_i][invader_j] = 3;
+                                alienVec.at(index)->kill();
+                                killCount++;
+                                deleteBullet = true;
+
+                                if(playerScore > scoreToBeat)
+                                    scoreToBeat = playerScore;
+
+                                mp_alienHit->setMedia(QUrl::fromLocalFile("../SpaceInvaders/Assets/Sound/invaderkilled.wav"));
+                                mp_alienHit->play();
+                            }
+                        }
+                    }
+
+                    if(ufo != NULL)
+                    {
+                        if((bullets[h]->GetPosY() <= 70) && (bullets[h]->GetPosY() >= 30))
+                        {
+                            if(ufo->CheckCollision(bullets[h]->GetPosX(), bullets[h]->GetPosY()))
+                            {
+                                ufo->MarkForDelete();
+                                playerScore += 200;
+                            }
+                        }
+                    }
+                }
+
+                //=================
                 // Bunker Collision
                 //=================
-                if(bullets[h]->GetPosY() >= 590 && bullets[h]->GetPosY() <= 650)
+                if(bullets[h]->GetPosY() >= 590 && bullets[h]->GetPosY() <= 650 && !deleteBullet)
                 {
                     // Bunker Coordinates calculations
                     int bunker_k = bullets[h]->GetPosX() / 225;
@@ -566,53 +626,6 @@ void GameManager::updateBullets()
                                 {
                                     bunker[bunker_k][i][j] = 0;
                                 }
-                            }
-                        }
-                    }
-                }
-                //=================
-                // Alien Collision
-                //=================
-                if(h == 0)
-                {
-                    int grid_j = (bullets[h]->GetPosX() - 15) / X_OFFSET;
-                    int grid_i = (bullets[h]->GetPosY() - 70) / Y_OFFSET;
-
-                    // Find invader coord to determine type:
-                    int invader_i = grid_i - abs(invadersTopRow);
-                    int invader_j = grid_j - abs(invadersLeftColumn);
-
-                    if((invader_i < 5) && (invader_j < 11) && (invader_i >= 0) && (invader_j >= 0))
-                    {
-                        if(grid[grid_i][grid_j] == 1)
-                        {
-                            int index = (invader_i * 11) + invader_j;
-                            if(index >= 0 && alienVec.at(index) != NULL)
-                            {
-                                grid[grid_i][grid_j] = 0;
-                                invaders[invader_i][invader_j] = 3;
-                                alienVec.at(index)->kill();
-                                killCount++;
-                                deleteBullet = true;
-                                playerScore += (invaders[invader_i][invader_j] + 2) * 10;
-
-                                if(playerScore > scoreToBeat)
-                                    scoreToBeat = playerScore;
-
-                                mp_alienHit->setMedia(QUrl::fromLocalFile("../SpaceInvaders/Assets/Sound/invaderkilled.wav"));
-                                mp_alienHit->play();
-                            }
-                        }
-                    }
-
-                    if(ufo != NULL)
-                    {
-                        if((bullets[h]->GetPosY() <= 70) && (bullets[h]->GetPosY() >= 30))
-                        {
-                            if(ufo->CheckCollision(bullets[h]->GetPosX(), bullets[h]->GetPosY()))
-                            {
-                                ufo->MarkForDelete();
-                                playerScore += 200;
                             }
                         }
                     }
@@ -656,12 +669,6 @@ void GameManager::updateBullets()
                         alienVec.at(alienFireTracker[h]);
                         alienFireTracker[h] = -1;
                     }
-                }
-
-                if(killCount == 55)
-                {
-                    Victory();
-                    return;
                 }
             }
         }
