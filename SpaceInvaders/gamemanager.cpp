@@ -280,10 +280,6 @@ void GameManager::keyPressEvent(QKeyEvent *event)
         UpdateHighscores();
         this->close();
     }
-//    else if(event->key() == Qt::Key_Right)
-//    {
-//        updateAliens();
-//    }
     else
     {
         player->InputHandler(event, true);

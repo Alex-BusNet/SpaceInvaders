@@ -67,7 +67,7 @@ void Bullet::UpdatePos()
 {
     if(player)
     {
-        posY -= 10;
+        posY -= 9;
     }
     else
     {
